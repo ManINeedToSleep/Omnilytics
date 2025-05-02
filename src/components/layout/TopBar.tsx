@@ -1,3 +1,12 @@
+/**
+ * @fileoverview TopBar component for the dashboard layout.
+ * Displays controls like sidebar toggle, search (placeholder), notifications, and user profile dropdown (placeholder).
+ * It receives a callback to toggle the sidebar.
+ * Connects to:
+ *   - src/app/dashboard/layout.tsx (parent, provides toggle callback)
+ *   - src/store/authStore.ts (potentially for user info in dropdown)
+ *   - lucide-react (for icons)
+ */
 'use client';
 
 import { useAuthStore } from "@/store/authStore";
@@ -17,51 +26,41 @@ export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const currentTheme = 'light'; // Placeholder
 
   return (
-    <header className="flex items-center justify-between h-16 px-4 md:px-8 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex-shrink-0">
-      {/* Left Side: Toggle Button & Search */}
+    // I'll use the consistent slightly lighter gray for the top bar bg in dark mode
+    // Adding z-index to ensure it's below the sidebar overlay
+    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 md:px-8 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      {/* Left Side: Toggle Button */}
       <div className="flex items-center space-x-4">
-        {/* Sidebar Toggle Button */} 
-        <button 
+        {/* Sidebar Toggle Button */}
+        <button
           onClick={onToggleSidebar}
-          className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+          // Standardizing padding and adding transition
+          className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors duration-150"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Search Bar Placeholder */}
-        <div className="hidden md:block">
-          <input 
-            type="search" 
-            placeholder="Search..."
-            className="w-full max-w-xs px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-md text-sm bg-gray-50 dark:bg-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
+        {/* Search Bar Removed */}
       </div>
 
       {/* Right Side: User Actions */}
       <div className="flex items-center space-x-3 md:space-x-4">
-        {/* Removed Filter Buttons */}
-
-        {/* Theme Toggle Button */} 
-        <button className="p-1.5 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-slate-700">
-          {currentTheme === 'dark' ? <Sun className="h-5 w-5"/> : <Moon className="h-5 w-5"/>}
-        </button>
-        
-        {/* Notifications Button */} 
-        <button className="p-1.5 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-slate-700">
+        {/* Notifications Button */}
+        <button className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors duration-150">
           <Bell className="h-5 w-5"/>
         </button>
-        
+
         {/* Profile/Logout Dropdown Placeholder */}
         <div className="relative">
-           <button className="flex items-center space-x-1 p-1 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-slate-700">
-             <UserIcon className="h-5 w-5" /> 
-             <ChevronDown className="h-4 w-4 opacity-75" /> 
+           {/* Standardizing padding and adding transition */}
+           <button className="flex items-center space-x-1 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors duration-150">
+             <UserIcon className="h-5 w-5" />
+             <ChevronDown className="h-4 w-4 opacity-75" />
            </button>
-           {/* Dropdown Menu (Conditional Rendering) */} 
+           {/* Dropdown Menu (Conditional Rendering) */}
            {isProfileMenuOpen && (
-             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
                {/* <Link href="/dashboard/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-600">Your Profile</Link> */}
                {/* <Link href="/dashboard/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-600">Settings</Link> */}
                {/* <LogoutButton /> // Needs to be styled for dropdown */}

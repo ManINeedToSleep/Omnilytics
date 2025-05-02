@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Sidebar component for the dashboard layout.
+ * Displays primary navigation, platform links (collapsible), settings, and user info.
+ * It receives an `isOpen` prop to control its visibility and applies fixed positioning for an overlay effect.
+ * Connects to:
+ *   - src/app/dashboard/layout.tsx (parent, provides isOpen state)
+ *   - src/store/authStore.ts (for user info)
+ *   - lucide-react (for icons)
+ */
 'use client';
 
 import Link from 'next/link';
@@ -32,7 +41,13 @@ const platformNavItems = [
   { href: '/dashboard/linkedin', label: 'LinkedIn', Icon: Linkedin },
 ];
 
-export default function Sidebar() {
+// --- Props Interface --- //
+interface SidebarProps {
+  isOpen: boolean;
+}
+
+// --- Sidebar Component --- //
+export default function Sidebar({ isOpen }: SidebarProps) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const [isPlatformsOpen, setIsPlatformsOpen] = useState(false); // Default closed?
@@ -42,10 +57,10 @@ export default function Sidebar() {
     return (
       <Link
         href={href}
-        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 
+        className={`flex items-center px-3 py-3 rounded-md text-sm font-medium transition-colors duration-150 
           ${isActive
-            ? 'bg-slate-900 text-white' // Active background
-            : 'text-gray-300 hover:bg-slate-700 hover:text-white' // Inactive hover
+            ? 'bg-indigo-600 text-white' // Active background using brand color
+            : 'text-gray-300 hover:bg-gray-700 hover:text-white' // Inactive hover (darker gray)
           }`}
       >
         <Icon className="mr-3 h-5 w-5 flex-shrink-0" aria-hidden="true" />
@@ -55,13 +70,17 @@ export default function Sidebar() {
   };
 
   return (
-    // Use a slightly darker bg for sidebar, ensure full height
-    <aside className="w-64 bg-slate-800 text-gray-100 flex flex-col h-screen">
-      {/* Title/Logo */}
-      <div className="h-16 flex items-center justify-center border-b border-slate-700 flex-shrink-0">
-        <Link href="/dashboard" className="text-xl font-bold text-white hover:opacity-90 transition-opacity">
-          {/* Consider adding a logo icon here */}
-          Omnilytics
+    // Applying fixed positioning, z-index, transitions, and ensuring correct background
+    <aside
+      className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-gray-100 flex flex-col h-screen transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Title/Logo section - using darker gray-900 */}
+      <div className="h-16 flex items-center justify-center border-b border-gray-700 flex-shrink-0 px-4 bg-gray-900">
+        <Link href="/dashboard" className="text-xl font-bold text-white hover:opacity-90 transition-opacity flex items-center space-x-2 group">
+          {/* Adding the logo SVG from landing page */}
+          <div className="rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 p-1.5 shadow-md transition-transform duration-300 group-hover:scale-105">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+          <span>Omnilytics</span>
         </Link>
       </div>
 
@@ -75,7 +94,7 @@ export default function Sidebar() {
         <div>
           <button
             onClick={() => setIsPlatformsOpen(!isPlatformsOpen)}
-            className="flex items-center justify-between w-full px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-slate-700 hover:text-white focus:outline-none"
+            className="flex items-center justify-between w-full px-3 py-3 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white focus:outline-none"
             aria-expanded={isPlatformsOpen}
           >
             <div className="flex items-center">
@@ -84,9 +103,9 @@ export default function Sidebar() {
             </div>
             {isPlatformsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
-          {/* Collapsible Content */}
+          {/* Collapsible Content - slight indent */}
           {isPlatformsOpen && (
-            <div className="mt-1 pl-6 space-y-1 border-l border-slate-700 ml-2.5">
+            <div className="mt-1 pl-5 space-y-1">
               {platformNavItems.map((item) => (
                  <NavLink key={item.label} {...item} />
               ))}
@@ -94,23 +113,23 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Separator */} 
+        {/* Separator */}
         <div className="pt-2 pb-1">
-           <hr className="border-t border-slate-700"/>
+           <hr className="border-t border-gray-700"/>
         </div>
 
         {/* Settings Link */}
          <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
       </nav>
 
-      {/* Account Section at Bottom */}
-      <div className="p-3 border-t border-slate-700 flex-shrink-0 bg-slate-900">
-         <Link 
-           href="/dashboard/settings" 
-           className="flex items-center space-x-3 group p-2 rounded-md hover:bg-slate-700 transition-colors duration-150"
+      {/* Account Section at Bottom - Ensure consistent padding */}
+      <div className="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900">
+         <Link
+           href="/dashboard/settings"
+           className="flex items-center space-x-3 group p-2 rounded-md hover:bg-gray-700 transition-colors duration-150"
          >
-          {/* Simple Avatar */} 
-          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600">
+          {/* Simple Avatar */}
+          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600 flex-shrink-0">
             {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">

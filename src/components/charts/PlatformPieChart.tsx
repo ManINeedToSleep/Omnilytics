@@ -1,3 +1,11 @@
+/**
+ * @fileoverview PlatformPieChart component using Recharts.
+ * Displays the distribution of a metric (e.g., engagement, followers) across different platforms.
+ * Uses platform-specific brand colors defined in the data.
+ * Connects to:
+ *   - Parent components passing platform distribution data.
+ *   - recharts library.
+ */
 'use client';
 
 import {
@@ -9,22 +17,24 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+// --- Interfaces --- //
 interface PlatformData {
-  name: string;
-  value: number;
-  fill: string; // Color associated with the platform
+  name: string; // Platform name (e.g., Instagram)
+  value: number; // Metric value for this platform
+  fill: string; // Platform-specific color hex code (e.g., #E1306C)
 }
 
 interface PlatformPieChartProps {
-  data: PlatformData[];
+  data: PlatformData[]; // Expects data array with name, value, and fill
 }
 
+// --- Component --- //
 export default function PlatformPieChart({ data }: PlatformPieChartProps) {
   // Define tooltip content style for dark mode
   const tooltipStyle = {
-    backgroundColor: 'rgba(30, 41, 59, 0.9)', // bg-slate-800 with opacity
-    border: '1px solid #475569', // border-slate-600
-    color: '#cbd5e1' // text-slate-300
+    backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
+    border: '1px solid #4b5563', // border-gray-600
+    color: '#d1d5db' // text-gray-300
   };
 
   return (
@@ -35,21 +45,24 @@ export default function PlatformPieChart({ data }: PlatformPieChartProps) {
           cx="50%" // Center X
           cy="50%" // Center Y
           labelLine={false}
-          // Example label - adjust styling for dark mode if enabled
+          // Label rendering (optional, can be complex)
           // label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
           outerRadius="80%" // Use percentage for better responsiveness
-          fill="#8884d8" // Default fill, overridden by Cell
+          innerRadius="30%" // Make it a donut chart
+          paddingAngle={3} // Add spacing between segments
+          fill="#8884d8" // Default fill (not really used due to Cells)
           dataKey="value"
-          stroke="#334155" // Add a subtle border matching dark card bg - slate-700
+          stroke="none" // Remove cell borders for a cleaner look
         >
+          {/* I'm using the 'fill' property directly from the data object */}
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
         </Pie>
         {/* Dark mode tooltip */}
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(100, 116, 139, 0.1)' }}/> {/* slate-500/10 */}
+        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(107, 114, 128, 0.1)' }}/> {/* gray-500/10 */}
         {/* Dark mode legend */}
-        <Legend wrapperStyle={{ color: '#cbd5e1' }} /> {/* slate-300 */}
+        <Legend wrapperStyle={{ color: '#d1d5db', fontSize: '12px', paddingTop: '15px' }} /> {/* gray-300 */}
       </PieChart>
     </ResponsiveContainer>
   );
