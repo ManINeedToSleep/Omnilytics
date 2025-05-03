@@ -1,0 +1,82 @@
+// Firestore Security Rules for Omnilytics
+// Documentation: DatabaseDocumentation.md
+// Corresponds to models in: src/lib/models/
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the authenticated user matches the requested userId
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Rules for the 'users' collection
+    // Path: /users/{userId}
+    match /users/{userId} {
+      // Allow read and create only if the user is the owner
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+                      // Basic validation: ensure required fields are present on create
+                      // && request.resource.data.email == request.auth.token.email // If using email from token
+                      // && request.resource.data.createdAt == request.time // Ensure server timestamp is used
+                      // && request.resource.data.subscriptionTier == 'free' // Ensure default tier on creation
+                      // Add checks for accountLimits structure if needed.
+                      // More complex validation often better handled in Cloud Functions.
+
+      // Allow update only by the owner, but restrict certain fields
+      allow update: if isOwner(userId)
+                     // Prevent users from changing critical or backend-managed fields directly
+                     && request.resource.data.email == resource.data.email
+                     && request.resource.data.createdAt == resource.data.createdAt
+                     && request.resource.data.subscriptionTier == resource.data.subscriptionTier // Ideally managed by backend/functions
+                     && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus // Ideally managed by backend/functions
+                     && request.resource.data.premiumExpiry == resource.data.premiumExpiry; // Ideally managed by backend/functions
+                     // Allow updates to displayName, photoURL, dashboardLayout, preferences, providers?
+
+      // Generally disallow direct deletion of user documents
+      allow delete: if false;
+
+      // --- Subcollections ---
+
+      // Rules for 'socialAccounts' subcollection
+      // Path: /users/{userId}/socialAccounts/{accountId}
+      match /socialAccounts/{accountId} {
+        // Allow full CRUD access only to the owner of the parent user document
+        allow read, write: if isOwner(userId);
+        // Note: Account limit checks (e.g., maxTotal) are difficult to enforce reliably
+        // in security rules alone when creating. Best handled by a Cloud Function.
+      }
+
+      // Rules for 'analyticsTimeSeries' subcollection (nested under socialAccounts)
+      // Path: /users/{userId}/socialAccounts/{accountId}/analyticsTimeSeries/{timeSeriesId}
+      match /socialAccounts/{accountId}/analyticsTimeSeries/{timeSeriesId} {
+        // Allow reads only by the owner
+        allow read: if isOwner(userId);
+
+        // Disallow direct client writes; should be managed by backend/functions
+        allow write: if false; // Or check for specific backend/function credentials if needed later
+      }
+    }
+
+    // Rules for the top-level 'posts' collection
+    // Path: /posts/{postId}
+    match /posts/{postId} {
+      // Allow read only if the user ID in the post matches the authenticated user
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Allow create only if the user ID being set matches the authenticated user
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Allow update/delete only if the user ID in the existing post matches the authenticated user
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+                             // Consider restricting updates to specific fields if needed (e.g., only metrics, not userId/accountId)
+    }
+  }
+} 

@@ -1,10 +1,11 @@
 /**
  * @fileoverview Sidebar component for the dashboard layout.
- * Displays primary navigation, platform links (collapsible), settings, and user info.
+ * Displays primary navigation, platform links (collapsible), settings, logout, and user info.
  * It receives an `isOpen` prop to control its visibility and applies fixed positioning for an overlay effect.
  * Connects to:
  *   - src/app/dashboard/layout.tsx (parent, provides isOpen state)
  *   - src/store/authStore.ts (for user info)
+ *   - src/components/auth/LogoutButton.tsx (for the logout action)
  *   - lucide-react (for icons)
  */
 'use client';
@@ -13,6 +14,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import LogoutButton from "@/components/auth/LogoutButton"; // Import LogoutButton
 import {
   LayoutDashboard, 
   BarChart3, 
@@ -24,7 +26,8 @@ import {
   Twitter, 
   Linkedin, 
   ChevronDown, 
-  ChevronUp
+  ChevronUp,
+  LogOut // Import LogOut icon
 } from 'lucide-react'; // Import Lucide icons
 
 // Updated Nav Items with Lucide Icons
@@ -84,8 +87,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Navigation - Increased padding bottom to make space for user section */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto pb-16">
         {mainNavItems.map((item) => (
           <NavLink key={item.label} {...item} />
         ))}
@@ -119,11 +122,17 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         </div>
 
         {/* Settings Link */}
-         <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
+        <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
+
+        {/* Logout Button - Adding it here above the user profile section */}
+        <div className="pt-2">
+          <LogoutButton />
+        </div>
       </nav>
 
-      {/* Account Section at Bottom - Ensure consistent padding */}
-      <div className="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900">
+      {/* Account Section fixed at Bottom */}
+      {/* Changed positioning to absolute to keep it at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gray-900">
          <Link
            href="/dashboard/settings"
            className="flex items-center space-x-3 group p-2 rounded-md hover:bg-gray-700 transition-colors duration-150"
