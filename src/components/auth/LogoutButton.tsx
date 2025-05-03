@@ -1,13 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
 
 export default function LogoutButton() {
-  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

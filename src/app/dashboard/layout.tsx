@@ -30,8 +30,8 @@ export default function DashboardLayout({
   };
 
   return (
-    // I'm using a richer slate background for dark mode
-    <div className="flex bg-slate-50 dark:bg-slate-900 min-h-screen">
+    // Use a darker background for the main layout in dark mode
+    <div className="flex bg-slate-100 dark:bg-gray-900 min-h-screen">
       {/* Sidebar is now fixed position, controlled by state */}
       <Sidebar isOpen={isSidebarOpen} />
 

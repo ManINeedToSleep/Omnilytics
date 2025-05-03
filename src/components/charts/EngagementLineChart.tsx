@@ -20,12 +20,13 @@ import {
 } from 'recharts';
 
 // --- Interfaces --- //
-interface EngagementData {
+// Export the interface so it can be imported elsewhere
+export interface EngagementData {
   name: string; // Typically the time period (e.g., 'Jan', 'Feb')
   [key: string]: number | string; // Allow dynamic keys for platforms (e.g., Instagram, YouTube)
 }
 
-interface EngagementLineChartProps {
+export interface EngagementLineChartProps {
   data: EngagementData[];
 }
 

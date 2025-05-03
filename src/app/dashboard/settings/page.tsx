@@ -192,7 +192,7 @@ export default function SettingsPage() {
           provider = new OAuthProvider('twitter.com');
           // No explicit client-side scopes usually needed for Twitter via Firebase; handled by app permissions
           break;
-        default:
+      default:
           setError(`Connecting ${platform} is not yet supported.`);
           setIsConnecting(null);
           return;
@@ -403,7 +403,7 @@ export default function SettingsPage() {
     }
     const generalError = activeTabId !== 'accounts' ? error : null;
 
-    return (
+        return (
       <>
         {generalError && (
           <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
@@ -429,11 +429,11 @@ export default function SettingsPage() {
                           isConnecting={isConnecting} 
                           connectionError={activeTabId === 'accounts' ? error : null} 
                         />;
-              case 'notifications': 
+      case 'notifications':
                 return <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6"><h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Notification Settings</h3><p className='text-gray-600 dark:text-gray-400'>Notification options coming soon...</p></div>;
-              case 'appearance': 
+      case 'appearance':
                 return <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6"><h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Appearance Settings</h3><p className='text-gray-600 dark:text-gray-400'>Theme customization options coming soon...</p></div>;
-              case 'security': 
+      case 'security':
                 return <SecuritySettingsForm 
                           onSecuritySave={handleSecuritySave} 
                           isSaving={isSaving}
@@ -498,7 +498,7 @@ export default function SettingsPage() {
               {settingsTabs.map((tab) => (
                 <TabButton key={tab.id} tab={tab} isActive={activeTabId === tab.id} />
               ))}
-            </nav>
+              </nav>
           </div>
 
           {/* Right Content Area */}

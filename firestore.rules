@@ -30,15 +30,18 @@ service cloud.firestore {
                       // Add checks for accountLimits structure if needed.
                       // More complex validation often better handled in Cloud Functions.
 
-      // Allow update only by the owner, but restrict certain fields
+      // Allow update only by the owner, ensuring critical fields are not changed
       allow update: if isOwner(userId)
-                     // Prevent users from changing critical or backend-managed fields directly
-                     && request.resource.data.email == resource.data.email
-                     && request.resource.data.createdAt == resource.data.createdAt
-                     && request.resource.data.subscriptionTier == resource.data.subscriptionTier // Ideally managed by backend/functions
-                     && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus // Ideally managed by backend/functions
-                     && request.resource.data.premiumExpiry == resource.data.premiumExpiry; // Ideally managed by backend/functions
-                     // Allow updates to displayName, photoURL, dashboardLayout, preferences, providers?
+                     // Check that critical/backend-managed fields are either not present in the update
+                     // or, if they are present, their value hasn't changed.
+                     && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email)
+                     && (!('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt)
+                     && (!('subscriptionTier' in request.resource.data) || request.resource.data.subscriptionTier == resource.data.subscriptionTier)
+                     && (!('subscriptionStatus' in request.resource.data) || request.resource.data.subscriptionStatus == resource.data.subscriptionStatus)
+                     && (!('premiumExpiry' in request.resource.data) || request.resource.data.premiumExpiry == resource.data.premiumExpiry)
+                     && (!('accountLimits' in request.resource.data) || request.resource.data.accountLimits == resource.data.accountLimits)
+                     && (!('providers' in request.resource.data) || request.resource.data.providers == resource.data.providers);
+                     // This implicitly allows updates to other fields like displayName, photoURL, preferences, etc.
 
       // Generally disallow direct deletion of user documents
       allow delete: if false;
