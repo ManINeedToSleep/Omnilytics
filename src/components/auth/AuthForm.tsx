@@ -219,9 +219,10 @@ export default function AuthForm() {
     }
   };
 
-  // Back button handler (needs router integration later)
+  // Back button handler - navigate explicitly to landing page
   const handleBack = () => {
-    router.back(); // Use router for back navigation
+    // router.back(); // Don't use browser history
+    router.push('/'); // Go to the landing page
   };
 
   return (
