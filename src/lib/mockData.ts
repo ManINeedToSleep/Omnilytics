@@ -173,4 +173,111 @@ export const mockInstagramFollowerGrowth = [
   { name: 'May', Followers: 2900 },
   { name: 'Jun', Followers: 3200 },
   { name: 'Jul', Followers: 3500 },
+];
+
+// --- LinkedIn Specific Mock Data ---
+export const mockLinkedInProfileStats = {
+  connections: '500+',
+  profileViews: '1.2k',
+  postImpressions: '15k',
+  engagementRate: '2.1%',
+};
+
+export interface LinkedInPostPerformance {
+  id: string;
+  contentSummary: string;
+  type: 'Article' | 'Post' | 'Document';
+  impressions: number;
+  reactions: number;
+  comments: number;
+  reposts?: number;
+  publishedDate: string;
+  thumbnailUrl?: string;
+}
+
+export const mockLinkedInPostData: LinkedInPostPerformance[] = [
+  {
+    id: 'li1',
+    contentSummary: 'Excited to share insights on modern web development trends...',
+    type: 'Article',
+    impressions: 5200,
+    reactions: 150,
+    comments: 35,
+    reposts: 12,
+    publishedDate: '2023-11-01',
+    thumbnailUrl: 'https://via.placeholder.com/100x100.png/0A66C2/ffffff?Text=LI+Article'
+  },
+  {
+    id: 'li2',
+    contentSummary: 'Networking tips for tech professionals. #Networking #Career',
+    type: 'Post',
+    impressions: 8700,
+    reactions: 320,
+    comments: 75,
+    publishedDate: '2023-10-20',
+    thumbnailUrl: 'https://via.placeholder.com/100x100.png/0077B5/ffffff?Text=LI+Post'
+  },
+];
+
+export const mockLinkedInConnectionsGrowth = [
+  { name: 'Jan', Connections: 300 },
+  { name: 'Feb', Connections: 350 },
+  { name: 'Mar', Connections: 400 },
+  { name: 'Apr', Connections: 480 },
+  { name: 'May', Connections: 510 },
+  { name: 'Jun', Connections: 550 },
+  { name: 'Jul', Connections: 590 },
+];
+
+// --- Twitter/X Specific Mock Data ---
+export const mockTwitterProfileStats = {
+  followers: '2.1k',
+  following: '350',
+  tweets: '1.5k',
+  engagementRate: '1.8%', // Per tweet average
+  impressions: '120k', // Total impressions over a period
+};
+
+export interface TwitterPostPerformance {
+  id: string;
+  tweetText: string;
+  impressions: number;
+  engagements: number; // Total (likes, retweets, replies, clicks)
+  retweets: number;
+  likes: number;
+  replies: number;
+  publishedDate: string;
+}
+
+export const mockTwitterPostData: TwitterPostPerformance[] = [
+  {
+    id: 'tw1',
+    tweetText: 'Just launched a new feature on Omnilytics! Check it out. #SaaS #Analytics',
+    impressions: 12500,
+    engagements: 450,
+    retweets: 80,
+    likes: 300,
+    replies: 20,
+    publishedDate: '2023-11-02',
+  },
+  {
+    id: 'tw2',
+    tweetText: 'Quick thoughts on the future of AI in social media. 🤖 #AI #SocialMedia',
+    impressions: 22000,
+    engagements: 890,
+    retweets: 150,
+    likes: 680,
+    replies: 60,
+    publishedDate: '2023-10-28',
+  },
+];
+
+export const mockTwitterFollowerGrowth = [
+  { name: 'Jan', Followers: 1200 },
+  { name: 'Feb', Followers: 1350 },
+  { name: 'Mar', Followers: 1500 },
+  { name: 'Apr', Followers: 1700 },
+  { name: 'May', Followers: 1850 },
+  { name: 'Jun', Followers: 2000 },
+  { name: 'Jul', Followers: 2150 },
 ]; 

@@ -20,7 +20,7 @@ import {
   Youtube, 
   Linkedin, 
   Twitter, // Using Twitter icon for X for now
-  Facebook // Adding Facebook icon
+  // Facebook // Remove unused Facebook icon
 } from 'lucide-react';
 import { platformColors } from '@/lib/mockData'; // Import platform colors
 
@@ -29,9 +29,7 @@ const platforms = [
   { id: 'instagram', label: 'Instagram', Icon: Instagram, color: platformColors.Instagram },
   { id: 'youtube', label: 'YouTube', Icon: Youtube, color: platformColors.YouTube },
   { id: 'linkedin', label: 'LinkedIn', Icon: Linkedin, color: platformColors.LinkedIn },
-  { id: 'twitter', label: 'X', Icon: Twitter, color: platformColors.Twitter }, // Assuming Twitter color is black/defined
-  // Add Facebook if needed
-  // { id: 'facebook', label: 'Facebook', Icon: Facebook, color: '#1877F2' },
+  { id: 'twitter', label: 'X', Icon: Twitter, color: platformColors.Twitter },
 ];
 
 export default function ContentPage() {
@@ -39,7 +37,7 @@ export default function ContentPage() {
   const [postContent, setPostContent] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [isScheduling, setIsScheduling] = useState(false); // State for scheduling toggle
-  const [scheduledDateTime, setScheduledDateTime] = useState<string>(''); // Placeholder for date/time value
+  // const [scheduledDateTime, setScheduledDateTime] = useState<string>(''); // Remove unused state
   
   // State for view toggle (Create, Scheduled, Drafts)
   const [activeView, setActiveView] = useState<'create' | 'scheduled' | 'drafts'>('create');
@@ -157,12 +155,11 @@ export default function ContentPage() {
                  {/* Date/Time Picker Placeholder - Appears when scheduling is enabled */}
                  {isScheduling && (
                    <div className="relative mt-2">
-                      {/* This div would contain the actual date/time picker component */}
                      <input 
-                        type="text" // Would likely be replaced by a component
-                        readOnly // Make it read-only if using a picker overlay
-                        value={scheduledDateTime || 'Select date and time'} // Show placeholder or selected value
-                        onClick={() => alert('Date/Time Picker Placeholder Clicked!')} // Placeholder action
+                        type="text" 
+                        readOnly 
+                        value={ 'Select date and time'} // Removed scheduledDateTime
+                        // onClick={() => alert('Date/Time Picker Placeholder Clicked!')} // Removed placeholder action
                         placeholder="Select date and time" 
                         className="w-full cursor-pointer pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                       />
@@ -223,13 +220,11 @@ export default function ContentPage() {
       {activeView === 'scheduled' && (
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Scheduled Posts</h2>
-          {/* Placeholder for list/grid of scheduled posts */}
           <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
              <Calendar className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3"/>
              <p className="font-medium text-gray-700 dark:text-gray-300">No posts scheduled yet.</p>
-             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create and schedule a post using the 'Create Post' tab.</p>
+             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create and schedule a post using the &apos;Create Post&apos; tab.</p>
           </div>
-          {/* TODO: Add pagination if needed */}
         </div>
       )}
 
@@ -237,13 +232,11 @@ export default function ContentPage() {
       {activeView === 'drafts' && (
          <div className="space-y-6">
            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Draft Posts</h2>
-           {/* Placeholder for list/grid of draft posts */}
            <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6 text-center border border-dashed border-gray-300 dark:border-gray-600">
              <Save className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3"/>
              <p className="font-medium text-gray-700 dark:text-gray-300">No drafts saved yet.</p>
-             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create a post and use the 'Save Draft' button.</p>
+             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create a post and use the &apos;Save Draft&apos; button.</p>
           </div>
-           {/* TODO: Add pagination if needed */}
          </div>
       )}
     </div>
