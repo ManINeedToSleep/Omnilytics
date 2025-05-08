@@ -18,18 +18,18 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions'; // Import Functions SDK
 import type { SocialPlatform } from "@/lib/models/socialAccount.model";
 import EngagementLineChart, { type EngagementData } from "@/components/charts/EngagementLineChart";
 import PlatformPieChart from "@/components/charts/PlatformPieChart";
 import { mockEngagementData, mockPlatformData, mockStats } from "@/lib/mockData"; // Keep mock data for now
 import DashboardCard from '@/components/dashboard/DashboardCard';
+import DateRangePicker from '@/components/dashboard/DateRangePicker';
 import { LinkIcon, CalendarIcon, ChevronsUpDown } from "lucide-react";
-import { format, differenceInDays, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, differenceInDays, endOfMonth, eachDayOfInterval, subDays, startOfWeek, endOfWeek, startOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Define structure for processed stats
@@ -38,6 +38,12 @@ interface ProcessedStats {
   impressions: string | number;
   topContentTitle: string;
   newFollowers: string;
+}
+
+// Define structure for AI Insights (matching mock function response)
+interface AiInsights {
+  suggestions: string[];
+  overallSentiment: string;
 }
 
 // Define platform options based on connected accounts (will be dynamic later)
@@ -99,10 +105,15 @@ export default function DashboardPage() {
   const [processedLineData, setProcessedLineData] = useState<EngagementData[]>(mockEngagementData); // Use EngagementData[] type
   const [processedPieData, setProcessedPieData] = useState(mockPlatformData); // Init with mock
 
+  // Add state for AI Insights
+  const [aiInsights, setAiInsights] = useState<AiInsights | null>(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+
   // State for filters
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(
     {
-      from: new Date(new Date().setDate(new Date().getDate() - 30)), // Default: last 30 days
+      from: new Date(new Date().setDate(new Date().getDate() - 30)), // Initial default range
       to: new Date(),
     }
   );
@@ -116,7 +127,7 @@ export default function DashboardPage() {
 
   // Processing function - now filters mock data based on selected platforms and date range
   const processAnalyticsData = useCallback(() => {
-    console.log("Processing mock data with filters:", dateRange, selectedPlatforms);
+    console.log("Processing mock data with filters:", selectedRange, selectedPlatforms);
     
     const activePlatforms = availablePlatforms
       .filter(p => p.value !== 'all' && selectedPlatforms[p.value])
@@ -125,15 +136,15 @@ export default function DashboardPage() {
     let finalLineData: EngagementData[] = [];
     const dailyThreshold = 60;
 
-    if (dateRange?.from && dateRange?.to) {
-        const diffDays = differenceInDays(dateRange.to, dateRange.from);
+    if (selectedRange?.from && selectedRange?.to) {
+        const diffDays = differenceInDays(selectedRange.to, selectedRange.from);
         if (diffDays <= dailyThreshold) {
-            finalLineData = generateDailyMockData(dateRange, activePlatforms, mockEngagementData);
+            finalLineData = generateDailyMockData(selectedRange, activePlatforms, mockEngagementData);
         } else {
              // Monthly processing (existing logic)
             const monthMap: { [key: string]: number } = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5, 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11 };
-            const startMonth = dateRange.from.getMonth();
-            const endMonth = dateRange.to.getMonth();
+            const startMonth = selectedRange.from.getMonth();
+            const endMonth = selectedRange.to.getMonth();
             const dateFilteredEngagementData = mockEngagementData.filter(point => {
                 const monthIndex = monthMap[point.name];
                 return monthIndex !== undefined && monthIndex >= startMonth && monthIndex <= endMonth;
@@ -185,7 +196,7 @@ export default function DashboardPage() {
         newFollowers: '+1.2k', // Static mock value
     });
 
-  }, [dateRange, selectedPlatforms]); // Dependencies are correct
+  }, [selectedRange, selectedPlatforms]); // Update dependency array
 
   // Effect for initial account check and data load
   useEffect(() => {
@@ -205,6 +216,34 @@ export default function DashboardPage() {
         if (hasAccounts) {
           // Initial data processing after confirming accounts
           processAnalyticsData(); 
+          
+          // Fetch AI Insights
+          setIsLoadingInsights(true);
+          setInsightsError(null);
+          try {
+            const functionsInstance = getFunctions();
+            const getInsightsFunc = httpsCallable(functionsInstance, 'getAiInsights');
+            console.log("[DASHBOARD] Calling getAiInsights...");
+            const result = await getInsightsFunc();
+            console.log("[DASHBOARD] getAiInsights returned:", result.data);
+            // Type assertion might be needed depending on exact function return structure
+            const resultData = result.data as { success: boolean; insights: AiInsights; message?: string }; 
+            if (resultData.success && resultData.insights) {
+              setAiInsights(resultData.insights);
+            } else {
+              throw new Error(resultData.message || "Failed to get AI insights from function.");
+            }
+          } catch (error: unknown) {
+            console.error("[DASHBOARD] Error fetching AI insights:", error);
+            let message = "Could not load AI insights.";
+            if (typeof error === 'object' && error !== null && 'message' in error) {
+               message += ` Error: ${(error as {message: string}).message}`;
+            }
+            setInsightsError(message);
+            setAiInsights(null);
+          } finally {
+            setIsLoadingInsights(false);
+          }
         }
       } catch (error) {
         console.error("Error checking accounts or processing data:", error);
@@ -227,7 +266,7 @@ export default function DashboardPage() {
       processAnalyticsData();
     }
   // Depend on filters and the processing function itself
-  }, [dateRange, selectedPlatforms, processAnalyticsData, isLoading, hasConnectedAccounts]);
+  }, [selectedRange, selectedPlatforms, processAnalyticsData, isLoading, hasConnectedAccounts]); // Update dependency array
 
   // Handler for platform filter changes
   const handlePlatformSelect = (platform: string) => {
@@ -289,46 +328,17 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h1>
         {/* --- Filters Implementation --- */}
-        <div className="flex flex-wrap items-center gap-2"> {/* Use flex-wrap and gap */} 
-            {/* Date Range Picker */}
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button
-                    id="date"
-                    variant={"outline"}
-                    size="sm" // Use standard Shadcn sizes
-                    className={cn(
-                    "w-[260px] justify-start text-left font-normal", // Simplified class
-                    !dateRange && "text-muted-foreground"
-                    )}
-                >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange?.from ? (
-                    dateRange.to ? (
-                        <>
-                        {format(dateRange.from, "LLL dd, y")} - {/* Simple space */}
-                        {format(dateRange.to, "LLL dd, y")}
-                        </>
-                    ) : (
-                        format(dateRange.from, "LLL dd, y")
-                    )
-                    ) : (
-                    <span>Pick a date range</span>
-                    )}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange?.from}
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    numberOfMonths={1}
-                />
-                </PopoverContent>
-            </Popover>
-
+        <div className="flex flex-wrap items-center gap-2"> 
+            {/* Date Range Picker - Render the new component */}
+            <DateRangePicker 
+              onDateRangeChange={setSelectedRange} 
+              // Optionally pass the initial range if needed for consistency, 
+              // though the component has its own default.
+              // initialDateRange={selectedRange} 
+              // Pass className if you need specific styling for the trigger button
+              className="h-8" // Example: matching the platform button height
+            />
+            
             {/* Platform Selector Dropdown */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -398,8 +408,26 @@ export default function DashboardPage() {
 
       {/* Recent Activity/AI Suggestions */} 
       <DashboardCard title="Recent Activity / Suggestions">
-         <div className="min-h-[150px] flex items-center justify-center">
-             <p className="text-gray-500 dark:text-gray-400 italic">(Placeholder for activity feed or AI insights)</p>
+         <div className="min-h-[150px]">
+            {isLoadingInsights ? (
+              <div className="flex items-center justify-center h-full">
+                 <p className="text-gray-500 dark:text-gray-400 italic">Loading insights...</p>
+              </div>
+            ) : insightsError ? (
+              <div className="flex items-center justify-center h-full">
+                 <p className="text-red-500 dark:text-red-400 italic">{insightsError}</p>
+              </div>
+            ) : aiInsights && aiInsights.suggestions.length > 0 ? (
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300 pl-5 list-disc">
+                {aiInsights.suggestions.slice(0, 4).map((suggestion, index) => ( // Show top 4 suggestions
+                  <li key={index}>{suggestion}</li>
+                ))}
+              </ul>
+            ) : (
+               <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500 dark:text-gray-400 italic">(No suggestions available at the moment)</p>
+               </div>
+            )}
          </div>
       </DashboardCard>
     </div>

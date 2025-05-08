@@ -113,3 +113,40 @@ export const fetchInitialYouTubeStats = functions.onCall(
     }
   }
 );
+
+// --- NEW FUNCTION --- //
+// Use ES6 export syntax because package.json has "type": "module"
+export const getAiInsights = functions.onCall(
+  { region: "us-central1" }, 
+  async (request) => {
+    // For now, this function doesn't need specific data or authentication checks,
+    // but you might add them later (e.g., pass userId, check auth).
+    logger.info("getAiInsights called, returning mock data.");
+
+    // Simulate fetching/generating insights
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+
+    const mockInsights = {
+      suggestions: [
+        "Post more videos on Tuesdays for higher engagement.",
+        "Try using shorter captions for Instagram posts this week.",
+        "Engage with comments within the first hour of posting.",
+        "Consider running a poll on Twitter to boost interaction."
+      ],
+      overallSentiment: "positive", // Could be 'positive', 'neutral', 'negative'
+      // Add more mock fields as needed
+    };
+
+    try {
+      return {
+        success: true,
+        message: "Mock AI insights fetched successfully.",
+        insights: mockInsights,
+      };
+    } catch (error) {
+      logger.error("Error in getAiInsights (mock function):", error);
+      // This catch block is mostly for unexpected errors in the mock setup itself
+      throw new functions.HttpsError("internal", "Failed to return mock insights.", error);
+    }
+  }
+);
