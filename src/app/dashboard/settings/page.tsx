@@ -45,15 +45,17 @@ import { FirebaseError } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import type { User as FirestoreUser } from '@/lib/models/user.model';
 import type { SocialAccount, SocialPlatform } from '@/lib/models/socialAccount.model';
-import { User as UserIcon, Link as LinkIcon, Bell, Eye, Lock } from 'lucide-react';
+import { User as UserIcon, Link as LinkIcon, Bell, Eye, Lock, CreditCard } from 'lucide-react';
 
 // Import the settings components
 import ProfileSettingsForm from '@/components/settings/ProfileSettingsForm';
 import ConnectedAccountsManager from '@/components/settings/ConnectedAccountsManager';
 import SecuritySettingsForm from '@/components/settings/SecuritySettingsForm';
+import AppearanceSettingsForm from '@/components/settings/AppearanceSettingsForm';
+import NotificationSettingsForm from '@/components/settings/NotificationSettingsForm';
 
 // Define tab type
-type SettingsTabId = 'profile' | 'accounts' | 'notifications' | 'appearance' | 'security';
+type SettingsTabId = 'profile' | 'accounts' | 'notifications' | 'appearance' | 'security' | 'subscription';
 
 interface SettingsTab {
   id: SettingsTabId;
@@ -68,6 +70,7 @@ const settingsTabs: SettingsTab[] = [
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'appearance', label: 'Appearance', icon: Eye },
   { id: 'security', label: 'Security', icon: Lock },
+  { id: 'subscription', label: 'Subscription & Billing', icon: CreditCard },
 ];
 
 export default function SettingsPage() {
@@ -499,15 +502,17 @@ export default function SettingsPage() {
                           isConnecting={isConnecting} 
                           connectionError={activeTabId === 'accounts' ? error : null} 
                         />;
-      case 'notifications':
-                return <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6"><h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Notification Settings</h3><p className='text-gray-600 dark:text-gray-400'>Notification options coming soon...</p></div>;
-      case 'appearance':
-                return <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6"><h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Appearance Settings</h3><p className='text-gray-600 dark:text-gray-400'>Theme customization options coming soon...</p></div>;
-      case 'security':
+              case 'notifications':
+                return <NotificationSettingsForm />;
+              case 'appearance':
+                return <AppearanceSettingsForm />;
+              case 'security':
                 return <SecuritySettingsForm 
                           onSecuritySave={handleSecuritySave} 
                           isSaving={isSaving}
                         />;
+              case 'subscription':
+                return <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6"><h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Subscription & Billing</h3><p className='text-gray-600 dark:text-gray-400'>Manage your subscription plan and view billing history (Coming Soon).</p></div>;
               default: return null;
             }
           })()
