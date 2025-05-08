@@ -4,6 +4,7 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useAuthStore } from '@/store/authStore';
 import { useState } from 'react';
+import { LogOut } from 'lucide-react';
 
 export default function LogoutButton() {
   const user = useAuthStore((state) => state.user);
@@ -38,8 +39,9 @@ export default function LogoutButton() {
       <button
         onClick={handleLogout}
         disabled={isLoading}
-        className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
       >
+        <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
         {isLoading ? 'Logging out...' : 'Logout'}
       </button>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}

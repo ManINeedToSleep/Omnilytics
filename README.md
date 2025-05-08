@@ -3,9 +3,9 @@
 ## Project Overview
 Industry: Marketing/Technology
 Developer: ManINeedToSleep
-Completion Date: 2023
-GitHub Repository: [github.com/your-org/social-media-dashboard](https://github.com/your-org/social-media-dashboard)
-Live Demo: [social-media-dashboard.vercel.app](https://social-media-dashboard.vercel.app)
+Completion Date: Ongoing (Initial foundation laid Q4 2024 / Q1 2025)
+GitHub Repository: [ManINeedToSleep/Omnilytics/](https://github.com/ManINeedToSleep/Omnilytics)github.com
+Live Demo: (Planned)
 
 ## Business Problem
 
@@ -26,14 +26,14 @@ Most users either rely on native analytics from each platform or use expensive e
 ### Project Description
 Omnilitycs provides a unified interface to track, analyze, and optimize social media performance across Instagram, Twitter/X, Facebook, and LinkedIn. The application aggregates data from these platforms into intuitive visualizations, allowing users to identify trends, compare engagement metrics, and make informed decisions. Additionally, AI-powered suggestions help optimize content strategy based on historical performance.
 
-### Key Features
+### Key Features *(Note: Some features are planned or in early stages)*
 - **Multi-Platform Analytics**: Connect and monitor all major platforms in one place
 - **Real-Time Metrics**: Track follower growth, engagement rates, and content performance live
-- **AI Recommendations**: Generate content suggestions and sentiment analysis powered by OpenAI
-- **Collaborative Content Calendar**: Visualize scheduled content and manage workflows
+- **AI Recommendations**: Generate content suggestions and sentiment analysis powered by OpenAI (Planned)
+- **Content Creation & Scheduling**: Draft, schedule, and manage posts across platforms (Partially implemented)
 - **Interactive Visualizations**: Use dynamic charts to uncover trends and engagement patterns
-- **Secure Authentication**: Simple and secure login system
-- **Customizable Dashboards**: Personalize your analytics experience
+- **Secure Authentication**: Simple and secure login system (Using Firebase Auth)
+- **Customizable Dashboards**: Personalize your analytics experience (Planned)
 - **Mobile-Responsive Design**: Fully functional across all devices
 
 ### Value Proposition
@@ -42,107 +42,57 @@ Unlike platform-specific dashboards that force users to switch contexts or enter
 ### AI Implementation
 Our dashboard leverages AI through the OpenAI API to analyze engagement patterns and deliver actionable recommendations. The AI component analyzes historical content performance data to suggest optimal posting times, content types, and engagement strategies specific to each platform. This analysis would typically require a data scientist but is now automated and accessible to all users.
 
-### Technology Stack
-- **Frontend**: Next.js 14, React 18
-- **Styling**: Tailwind CSS 3
+### Technology Stack (Updated YYYY-MM-DD)
+- **Framework**: Next.js 15
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS 4, shadcn/ui (using Radix UI), clsx, tailwind-merge
+- **State Management**: Zustand
 - **Data Visualization**: Recharts
-- **Form Handling**: React Hook Form + Zod
-- **Authentication**: Custom auth system with NextAuth.js integration
-- **Database**: MongoDB Atlas (planned for production)
-- **AI Services**: OpenAI API
+- **Form Handling**: React Hook Form + Zod (Planned/Partially Implemented)
+- **Icons**: Lucide React
+- **Date Handling**: date-fns, React Day Picker
+- **Authentication**: Firebase Authentication
+- **Database**: Firebase Firestore
+- **Backend**: Firebase Functions (Planned)
+- **AI Services**: OpenAI API (Planned)
 - **Deployment**: Vercel
 
 ## Technical Implementation
 
+### Current Status (As of YYYY-MM-DD)
+- **Foundation**: Project initialized with Next.js 15, React 19, Tailwind CSS 4, shadcn/ui.
+- **Firebase Integration**: Firebase SDK configured. Firebase Authentication is set up (Google OAuth working) and Firestore is used for storing user data (`users` collection) and connected account details (`socialAccounts` subcollection). Security rules are in place.
+- **Account Connection**: Users can connect their YouTube account via OAuth. The connection flow correctly fetches and stores the specific YouTube Channel ID, Name, and Profile Picture in Firestore, rather than just the Google account details.
+- **Backend (Initial)**: A basic Firebase Cloud Function (`fetchInitialYouTubeStats`) written in JavaScript (ES6 modules) has been deployed. This function is triggered *once* after a YouTube account connection. It uses the YouTube Data API to fetch the current subscriber count and writes this initial data point to the `analyticsTimeSeries` subcollection in Firestore.
+- **Analytics Display**: The YouTube analytics page (`/dashboard/youtube`) reads data from Firestore. It currently displays the initial subscriber count fetched by the Cloud Function. The main dashboard (`/dashboard`) uses mock data, but the overview cards have been updated to reflect desired metrics (Total Followers, Impressions, Top Content, New Followers) using placeholders.
+- **UI Improvements**: Sidebar navigation updated (Analytics removed, Settings/Logout fixed at bottom, mobile close button added). Main dashboard date picker adjusted to display one month.
+- **Next Steps**: Building out the backend data pipeline (scheduled Cloud Functions) to periodically fetch and store comprehensive analytics data from platform APIs into Firestore. Implementing actual data fetching and processing logic on the dashboard pages to replace mock data.
+
 ### Wireframes & System Architecture
-The application follows a modern Next.js architecture with server and client components. Data flows from social media platform APIs through our backend services, which process and normalize the information before storing it in the database. The frontend retrieves this data through API routes and displays it using React components with Recharts for visualization.
+The application follows a modern Next.js architecture with server and client components. Data flows from social media platform APIs through our backend services, which process and normalize the information before storing it in the database (Firestore). The frontend retrieves this data (initially mocked, later via Firebase SDK/Functions) and displays it using React components with Recharts for visualization.
 
 For the MVP, we've implemented a mock data approach that simulates the full system without requiring actual API connections.
 
 ### Database Schema
-Our planned database structure includes collections for:
-- Users
-- SocialAccounts (linked to platforms)
-- AnalyticsData (time-series metrics)
-- Posts (content performance data)
-- DashboardWidgets (user preferences)
-
-Key relationships include one-to-many between users and social accounts, and one-to-many between social accounts and analytics data.
+Our planned database structure uses **Firebase Firestore**. See `DatabaseDocumentation.md` for the detailed schema including collections for `users`, `socialAccounts`, `posts`, and `analyticsTimeSeries`.
 
 ### Key Components
+*(Note: Specific component implementation details are evolving. Below are high-level descriptions)*
+
+- **Dashboard Layout**: The main structure holding various widgets and navigation elements.
+- **Analytics Visualizations**: Components utilizing Recharts to display data fetched from Firestore.
+- **Account Connection Interface**: UI elements for users to link their social media accounts (will interact with Firebase Auth and Firestore).
+- **Content Creation Interface**: A dedicated page (`src/app/dashboard/content/page.tsx`) allowing users to compose posts, select platforms, upload media (placeholder), and schedule (placeholder). Uses Zustand for state management locally.
+- **Authentication Forms**: Components for handling user sign-up, login, and potentially profile management via Firebase Auth.
 
 #### Dashboard Analytics
-The analytics page provides comprehensive metrics visualization with interactive charts:
-```jsx
-export default function Analytics() {
-  const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState("6M");
-
-  return (
-    <div className="space-y-8">
-      {/* Time range selector buttons */}
-      
-      {/* Engagement charts */}
-      <div className="rounded-lg bg-white p-6 shadow-md">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Engagement Over Time</h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={engagementData}>
-              {/* Chart configuration */}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      
-      {/* Other visualization components */}
-    </div>
-  );
-}
-```
+*(Placeholder removed - See 'Analytics Visualizations' above)*
 
 #### Social Account Management
-The accounts page allows users to connect and manage their social platforms:
-```jsx
-export default function Accounts() {
-  const { user } = useAuth();
-  const [accounts, setAccounts] = useState([
-    /* Account data */
-  ]);
-
-  const handleConnect = (accountId) => {
-    /* Connection logic */
-  };
-
-  const handleDisconnect = (accountId) => {
-    /* Disconnection logic */
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Account summary */}
-      
-      {/* Connected platforms */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {accounts.map((account) => (
-          <SocialAccount
-            key={account.id}
-            /* Account props */
-            onConnect={() => handleConnect(account.id)}
-            onDisconnect={() => handleDisconnect(account.id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-```
+*(Placeholder removed - See 'Account Connection Interface' above)*
 
 ### Authentication and Authorization
-Our system uses a custom authentication approach for the MVP, with plans to integrate NextAuth.js for production. The current implementation:
-- Manages user state with React context
-- Stores auth tokens in cookies and localStorage
-- Protects routes with custom middleware
-- Provides login, logout, and session persistence
+Authentication will be handled using **Firebase Authentication**. The initial implementation will focus on email/password and potentially Google OAuth. Firebase Security Rules will be used to protect Firestore data. *(Note: Previous mention of custom auth/NextAuth.js is outdated).*
 
 ## User Interface and Experience
 
@@ -159,6 +109,7 @@ Our system uses a custom authentication approach for the MVP, with plans to inte
 - **Home Page**: Product introduction and sign-in options
 - **Dashboard**: Overview of performance across all connected platforms
 - **Analytics**: Detailed metrics with interactive charts and visualizations
+- **Content Creation/Scheduling**: Interface for drafting and managing posts (`/dashboard/content`)
 - **Social Accounts**: Management interface for platform connections
 - **Profile**: User account settings and preferences
 
@@ -168,19 +119,41 @@ The application is built with a mobile-first approach using Tailwind CSS. All co
 ## Deployment
 
 ### Environment Variables
+*(Note: Review and update required variables based on Firebase integration)*
 ```
-MONGODB_URI=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
-OPENAI_API_KEY=
-FACEBOOK_API_KEY=
-TWITTER_API_KEY=
-INSTAGRAM_API_KEY=
-LINKEDIN_API_KEY=
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+# NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID= # Optional
+
+# OPENAI_API_KEY= # Needed later for AI features
+# VERCEL_URL= # Optional, Vercel provides system env var
+
+# Old/Potentially Unused:
+# MONGODB_URI=
+# NEXTAUTH_SECRET=
+# NEXTAUTH_URL=
+# FACEBOOK_API_KEY=
+# TWITTER_API_KEY=
+# INSTAGRAM_API_KEY=
+# LINKEDIN_API_KEY=
 ```
 
 ### Build and Deployment Process
 The application is configured for deployment on Vercel with automatic CI/CD from the GitHub repository. 
+
+4. **Run the development server**
+   *(Uses Turbopack for faster local development)*
+   ```bash
+   npm run dev
+   ```
+
+5. **Open** [http://localhost:3000](http://localhost:3000) to see the app in action.
+
+*(Note: The previous MVP credentials may not be relevant until Firebase Auth is implemented).*
 
 ## Future Enhancements
 - Direct integration with social media platform APIs

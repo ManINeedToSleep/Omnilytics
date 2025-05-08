@@ -35,9 +35,9 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 // Define structure for processed stats
 interface ProcessedStats {
   totalFollowers: string | number;
-  totalEngagement: string | number;
-  engagementRate: string;
-  reach: string | number;
+  impressions: string | number;
+  topContentTitle: string;
+  newFollowers: string;
 }
 
 // Define platform options based on connected accounts (will be dynamic later)
@@ -90,7 +90,12 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true); // Combined loading state
   
   // State for processed data
-  const [processedStats, setProcessedStats] = useState<ProcessedStats>(mockStats); // Init with mock
+  const [processedStats, setProcessedStats] = useState<ProcessedStats>({
+      totalFollowers: '0k',
+      impressions: '0k',
+      topContentTitle: 'N/A',
+      newFollowers: '+0'
+  }); 
   const [processedLineData, setProcessedLineData] = useState<EngagementData[]>(mockEngagementData); // Use EngagementData[] type
   const [processedPieData, setProcessedPieData] = useState(mockPlatformData); // Init with mock
 
@@ -164,20 +169,20 @@ export default function DashboardPage() {
     );
     setProcessedPieData(filteredPieData);
 
-    // --- Adjust Stats (remains the same simple example) ---
+    // --- Adjust Stats --- 
+    // Keep Total Followers calculation based on mock pie data for now
     let filteredFollowers = 0;
-    let filteredEngagement = 0;
     filteredPieData.forEach(p => {
-        filteredFollowers += p.value * 27.5;
-        filteredEngagement += p.value * 19.5;
+        filteredFollowers += p.value * 27.5; 
     });
     const formatK = (num: number) => (num / 1000).toFixed(1) + 'k';
     
+    // Set static mock values for the other cards until real data pipeline is built
     setProcessedStats({
-        totalFollowers: formatK(filteredFollowers),
-        totalEngagement: formatK(filteredEngagement),
-        engagementRate: mockStats.engagementRate, 
-        reach: mockStats.reach,
+        totalFollowers: formatK(filteredFollowers), // Keep mock calculation for this
+        impressions: '152.3k', // Static mock value
+        topContentTitle: 'How to Use Our New Feature', // Static mock value
+        newFollowers: '+1.2k', // Static mock value
     });
 
   }, [dateRange, selectedPlatforms]); // Dependencies are correct
@@ -319,7 +324,7 @@ export default function DashboardPage() {
                     defaultMonth={dateRange?.from}
                     selected={dateRange}
                     onSelect={setDateRange}
-                    numberOfMonths={2}
+                    numberOfMonths={1}
                 />
                 </PopoverContent>
             </Popover>
@@ -363,16 +368,21 @@ export default function DashboardPage() {
           <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{processedStats.totalFollowers}</p>
         </DashboardCard>
         <DashboardCard className="hover:scale-[1.03]">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Engagement</p>
-          <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{processedStats.totalEngagement}</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Impressions</p>
+          <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{processedStats.impressions}</p>
+        </DashboardCard>
+        {/* Special card for Top Content - might need different styling later */}
+        <DashboardCard className="hover:scale-[1.03]">
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Highest Performing Content</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white truncate" title={processedStats.topContentTitle}>
+            {/* Maybe add a link icon later? */}
+            {processedStats.topContentTitle}
+          </p>
         </DashboardCard>
         <DashboardCard className="hover:scale-[1.03]">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Engagement Rate</p>
-          <p className={`mt-1 text-3xl font-semibold ${processedStats.engagementRate.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{processedStats.engagementRate}</p>
-        </DashboardCard>
-        <DashboardCard className="hover:scale-[1.03]">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Reach</p>
-          <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">{processedStats.reach}</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">New Followers (Range)</p>
+          {/* Displaying with a plus, assuming positive change for mock */}
+          <p className="mt-1 text-3xl font-semibold text-green-600 dark:text-green-400">{processedStats.newFollowers}</p>
         </DashboardCard>
       </div>
 

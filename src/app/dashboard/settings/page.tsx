@@ -42,6 +42,7 @@ import {
   updatePassword
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import type { User as FirestoreUser } from '@/lib/models/user.model';
 import type { SocialAccount, SocialPlatform } from '@/lib/models/socialAccount.model';
 import { User as UserIcon, Link as LinkIcon, Bell, Eye, Lock } from 'lucide-react';
@@ -202,11 +203,48 @@ export default function SettingsPage() {
       const credential = OAuthProvider.credentialFromResult(result);
       if (!credential || !credential.accessToken) throw new Error('No credential found.');
       
-      const providerUserInfo = result.user;
-      console.log(`${platform} OAuth successful.`);
+      const providerUserInfo = result.user; // This is the Google User for YouTube OAuth
+      console.log(`${platform} OAuth successful with Google User:`, providerUserInfo.displayName);
+
+      let finalPlatformUserId = providerUserInfo.providerData[0].uid;
+      let finalUsername = providerUserInfo.displayName || `user_${finalPlatformUserId.substring(0, 5)}`;
+      let finalProfilePictureUrl = providerUserInfo.photoURL;
+
+      if (platform === 'youtube') {
+        try {
+          const accessToken = credential.accessToken;
+          const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true&access_token=${accessToken}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('YouTube API error:', errorData);
+            throw new Error(errorData.error?.message || 'Failed to fetch YouTube channel details.');
+          }
+          const youtubeData = await response.json();
+          if (youtubeData.items && youtubeData.items.length > 0) {
+            const channel = youtubeData.items[0];
+            finalPlatformUserId = channel.id; // Use YouTube Channel ID
+            finalUsername = channel.snippet.title; // Use YouTube Channel Title
+            finalProfilePictureUrl = channel.snippet.thumbnails.medium?.url || channel.snippet.thumbnails.default?.url || providerUserInfo.photoURL;
+            console.log('Fetched YouTube Channel:', finalUsername, finalPlatformUserId);
+          } else {
+            console.warn('No YouTube channel found for this Google account. Falling back to Google profile.');
+            // Keep Google User ID as platformUserId if no specific channel found, or handle as error
+            // For now, we are already initialized with Google data, so this branch means we use that if channel specific fetch fails to find items
+          }
+        } catch (ytApiError: unknown) {
+          console.error('Error fetching YouTube channel details:', ytApiError);
+          // Decide if this is a fatal error for connection or if we proceed with Google details
+          // For now, proceed with Google details as fallback, error will be shown by setError later if needed
+          let ytErrorMessage = 'Could not fetch specific YouTube channel details.';
+          if (ytApiError instanceof Error) ytErrorMessage += ` ${ytApiError.message}`;
+          // Potentially set a non-fatal warning here, or let the main catch handle it
+          // For now, we let it fallback to Google details if API call fails
+        }
+      }
       
       const accountsColRef = collection(db, 'users', authUser.uid, 'socialAccounts');
-      const q = query(accountsColRef, where("platform", "==", platform), where("platformUserId", "==", providerUserInfo.providerData[0].uid), limit(1));
+      // Query by the finalPlatformUserId which is now the YouTube Channel ID if platform is youtube
+      const q = query(accountsColRef, where("platform", "==", platform), where("platformUserId", "==", finalPlatformUserId), limit(1));
       const existingAccountSnap = await getDocs(q);
 
       if (!existingAccountSnap.empty) {
@@ -214,14 +252,46 @@ export default function SettingsPage() {
       } else {
           const docData = {
             platform: platform,
-            platformUserId: providerUserInfo.providerData[0].uid,
-            username: providerUserInfo.displayName || `user_${providerUserInfo.providerData[0].uid.substring(0, 5)}`,
-            profilePictureUrl: providerUserInfo.photoURL,
+            platformUserId: finalPlatformUserId,
+            username: finalUsername,
+            profilePictureUrl: finalProfilePictureUrl,
             status: 'connected',
             connectedAt: serverTimestamp(),
           };
-          await addDoc(accountsColRef, docData);
-          await fetchData();
+          const newDocRef = await addDoc(accountsColRef, docData);
+          console.log('New social account added with ID:', newDocRef.id);
+
+          // If YouTube, call the Cloud Function to fetch initial stats
+          if (platform === 'youtube' && credential?.accessToken) {
+            console.log('[SETTINGS_PAGE] Preparing to call fetchInitialYouTubeStats...');
+            try {
+              const functionsInstance = getFunctions(); 
+              const fetchStats = httpsCallable(functionsInstance, 'fetchInitialYouTubeStats');
+              console.log(`[SETTINGS_PAGE] Calling fetchInitialYouTubeStats with params: userId=${authUser.uid}, socialAccountId=${newDocRef.id}, youtubeChannelId=${finalPlatformUserId}, hasAccessToken=${!!credential.accessToken}`);
+              
+              const result = await fetchStats({
+                userId: authUser.uid,
+                socialAccountId: newDocRef.id,
+                accessToken: credential.accessToken,
+                youtubeChannelId: finalPlatformUserId, 
+              });
+              
+              console.log('[SETTINGS_PAGE] fetchInitialYouTubeStats Cloud Function call completed. Result:', result);
+              if (result && result.data) {
+                console.log('[SETTINGS_PAGE] Cloud Function returned data:', result.data);
+              }
+            } catch (functionsError: unknown) {
+              console.error("[SETTINGS_PAGE] Error calling or awaiting fetchInitialYouTubeStats Cloud Function:", functionsError);
+              // If functionsError is an object with a message property, log that too
+              if (typeof functionsError === 'object' && functionsError !== null && 'message' in functionsError) {
+                console.error("[SETTINGS_PAGE] Error message:", (functionsError as {message: string}).message);
+              }
+              // setError('Failed to fetch initial YouTube stats, but account connected.');
+            }
+            console.log('[SETTINGS_PAGE] Finished YouTube specific post-connection logic.');
+          }
+
+          await fetchData(); 
       }
     } catch (connectError: unknown) {
       console.error(`Error connecting ${platform}:`, connectError);

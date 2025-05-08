@@ -17,7 +17,6 @@ import { useAuthStore } from '@/store/authStore';
 import LogoutButton from "@/components/auth/LogoutButton"; // Import LogoutButton
 import {
   LayoutDashboard, 
-  BarChart3, 
   PenSquare, 
   Settings, 
   Network, 
@@ -27,13 +26,13 @@ import {
   Linkedin, 
   ChevronDown, 
   ChevronUp,
-  LogOut // Import LogOut icon
+  LogOut, // Import LogOut icon
+  X as XIcon // Import X icon for the close button
 } from 'lucide-react'; // Import Lucide icons
 
 // Updated Nav Items with Lucide Icons
 const mainNavItems = [
   { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/dashboard/analytics', label: 'Analytics', Icon: BarChart3 },
   { href: '/dashboard/content', label: 'Content', Icon: PenSquare },
 ];
 
@@ -47,10 +46,11 @@ const platformNavItems = [
 // --- Props Interface --- //
 interface SidebarProps {
   isOpen: boolean;
+  onToggleSidebar: () => void; // Add toggle function to props
 }
 
 // --- Sidebar Component --- //
-export default function Sidebar({ isOpen }: SidebarProps) {
+export default function Sidebar({ isOpen, onToggleSidebar }: SidebarProps) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const [isPlatformsOpen, setIsPlatformsOpen] = useState(false); // Default closed?
@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     <aside
       className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 text-gray-100 flex flex-col h-screen transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Title/Logo section - using darker gray-900 */}
-      <div className="h-16 flex items-center justify-center border-b border-gray-700 flex-shrink-0 px-4 bg-gray-900">
+      <div className="h-16 flex items-center justify-between border-b border-gray-700 flex-shrink-0 px-4 bg-gray-900">
         <Link href="/dashboard" className="text-xl font-bold text-white hover:opacity-90 transition-opacity flex items-center space-x-2 group">
           {/* Adding the logo SVG from landing page */}
           <div className="rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 p-1.5 shadow-md transition-transform duration-300 group-hover:scale-105">
@@ -85,10 +85,21 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           </div>
           <span>Omnilytics</span>
         </Link>
+        {/* Mobile Close Button for Sidebar */}
+        <button 
+          onClick={onToggleSidebar} 
+          className="md:hidden p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+          aria-label="Close sidebar"
+        >
+          <XIcon className="h-6 w-6" />
+        </button>
       </div>
 
-      {/* Navigation - Increased padding bottom to make space for user section */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto pb-16">
+      {/* Main Navigation - Scrollable, scrollbar hidden */}
+      {/* Tailwind classes for hiding scrollbar: scrollbar-hide (requires plugin) or custom like below */}
+      {/* For this example, I'll use a common set of classes. If you have tailwind-scrollbar-hide plugin, use that. */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto 
+                    [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {mainNavItems.map((item) => (
           <NavLink key={item.label} {...item} />
         ))}
@@ -115,41 +126,39 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             </div>
           )}
         </div>
-
-        {/* Separator */}
-        <div className="pt-2 pb-1">
-           <hr className="border-t border-gray-700"/>
-        </div>
-
-        {/* Settings Link */}
-        <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
-
-        {/* Logout Button - Adding it here above the user profile section */}
-        <div className="pt-2">
-          <LogoutButton />
-        </div>
       </nav>
 
-      {/* Account Section fixed at Bottom */}
-      {/* Changed positioning to absolute to keep it at the bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gray-900">
-         <Link
-           href="/dashboard/settings"
-           className="flex items-center space-x-3 group p-2 rounded-md hover:bg-gray-700 transition-colors duration-150"
-         >
-          {/* Simple Avatar */}
-          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600 flex-shrink-0">
-            {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate group-hover:text-gray-100">
-              {user?.displayName || 'User Settings'}
-            </p>
-            <p className="text-xs text-gray-400 truncate group-hover:text-gray-300">
-              {user?.email}
-            </p>
-          </div>
-        </Link>
+      {/* Bottom Fixed Section: Settings, Logout, and User Profile */}
+      {/* This section will stay at the bottom and not scroll */}
+      <div className="mt-auto border-t border-gray-700 bg-gray-900 flex-shrink-0">
+        {/* Settings and Logout Container */}
+        <div className="px-3 py-4 space-y-2">
+          {/* Settings Link */}
+          <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
+          {/* Logout Button */}
+          <LogoutButton />
+        </div>
+
+        {/* Account Section fixed at Bottom of this new div */}
+        <div className="p-4 border-t border-gray-700">
+          <Link
+            href="/dashboard/settings" // Or link to a dedicated profile page if you have one
+            className="flex items-center space-x-3 group p-2 rounded-md hover:bg-gray-800 transition-colors duration-150"
+          >
+            {/* Simple Avatar */}
+            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600 flex-shrink-0">
+              {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate group-hover:text-gray-100">
+                {user?.displayName || 'User Settings'}
+              </p>
+              <p className="text-xs text-gray-400 truncate group-hover:text-gray-300">
+                {user?.email}
+              </p>
+            </div>
+          </Link>
+        </div>
       </div>
     </aside>
   );

@@ -33,7 +33,7 @@ export default function DashboardLayout({
     // Use a darker background for the main layout in dark mode
     <div className="flex bg-slate-100 dark:bg-gray-900 min-h-screen">
       {/* Sidebar is now fixed position, controlled by state */}
-      <Sidebar isOpen={isSidebarOpen} />
+      <Sidebar isOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
 
       {/* Main content area adjusts padding based on sidebar state */}
       {/* Ensuring padding transition works correctly on relevant screen sizes */}
