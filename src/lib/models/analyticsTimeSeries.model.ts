@@ -11,14 +11,25 @@ import { SocialPlatform } from './socialAccount.model'; // Reusing the platform 
 // Includes common metrics across platforms, with specific ones potentially being null.
 interface TimeSeriesMetrics {
   followers?: number | null; // Follower count (e.g., Instagram, Twitter, LinkedIn).
-  subscribers?: number | null; // Subscriber count (e.g., YouTube).
+  subscribers?: number | null; // Subscriber count (e.g., YouTube) - Represents TOTAL on a given day if available.
   following?: number | null; // Following count (Platform dependent).
   views?: number | null; // Total post/video views during the period.
   watchTimeHours?: number | null; // Total watch time (e.g., YouTube).
+  watchTimeMinutes?: number | null; // Watch time in minutes (alternative format).
   engagement?: number | null; // Sum of engagements (likes, comments, shares, etc.).
   impressions?: number | null; // Total impressions.
   reach?: number | null; // Total reach.
   profileViews?: number | null; // Profile views.
+  likes?: number | null; // Total likes for all content.
+  comments?: number | null; // Total comments for all content.
+  shares?: number | null; // Total shares for all content.
+  averageViewDuration?: number | null; // Average view duration in seconds.
+  
+  // YouTube specific daily changes from Analytics API
+  subscribersGained?: number | null;
+  subscribersLost?: number | null;
+  netSubscribers?: number | null; // Calculated as gained - lost, represents daily change.
+
   // NOTE: Add other relevant time-series metrics per platform as needed here.
   // Consider using a more flexible structure like Record<string, number | null> if metrics vary greatly.
 }

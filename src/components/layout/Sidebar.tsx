@@ -133,31 +133,31 @@ export default function Sidebar({ isOpen, onToggleSidebar }: SidebarProps) {
       <div className="mt-auto border-t border-gray-700 bg-gray-900 flex-shrink-0">
         {/* Settings and Logout Container */}
         <div className="px-3 py-4 space-y-2">
-          {/* Settings Link */}
-          <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
+        {/* Settings Link */}
+        <NavLink href="/dashboard/settings" label="Settings" Icon={Settings} />
           {/* Logout Button */}
           <LogoutButton />
         </div>
 
         {/* Account Section fixed at Bottom of this new div */}
         <div className="p-4 border-t border-gray-700">
-          <Link
+         <Link
             href="/dashboard/settings" // Or link to a dedicated profile page if you have one
             className="flex items-center space-x-3 group p-2 rounded-md hover:bg-gray-800 transition-colors duration-150"
-          >
-            {/* Simple Avatar */}
-            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600 flex-shrink-0">
-              {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate group-hover:text-gray-100">
-                {user?.displayName || 'User Settings'}
-              </p>
-              <p className="text-xs text-gray-400 truncate group-hover:text-gray-300">
-                {user?.email}
-              </p>
-            </div>
-          </Link>
+         >
+          {/* Simple Avatar */}
+          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-sm font-medium text-white group-hover:bg-indigo-600 flex-shrink-0">
+            {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate group-hover:text-gray-100">
+              {user?.displayName || 'User Settings'}
+            </p>
+            <p className="text-xs text-gray-400 truncate group-hover:text-gray-300">
+              {user?.email}
+            </p>
+          </div>
+        </Link>
         </div>
       </div>
     </aside>

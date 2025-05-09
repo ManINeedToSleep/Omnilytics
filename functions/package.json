@@ -3,25 +3,28 @@
   "description": "Cloud Functions for Firebase",
   "type": "module",
   "scripts": {
-    "lint": "echo 'Lint step skipped by custom script' && exit 0",
-    "build": "echo 'Build step not needed for plain JS functions' && exit 0",
+    "lint": "echo \"Skipping lint for functions...\" && exit 0",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "build": "echo \"No build step required for JavaScript functions.\""
   },
   "engines": {
-    "node": "22"
+    "node": "18"
   },
   "main": "index.js",
   "dependencies": {
     "axios": "^1.6.8",
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.0.1"
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "googleapis": "^134.0.0"
   },
   "devDependencies": {
-    "firebase-functions-test": "^3.1.0"
+    "eslint": "^8.57.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.2.0"
   },
   "private": true
 }

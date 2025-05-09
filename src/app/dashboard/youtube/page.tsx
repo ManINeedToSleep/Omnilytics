@@ -53,9 +53,11 @@ interface ProcessedYouTubeChannelStats {
 
 export default function YouTubeAnalyticsPage() {
   const { user: authUser } = useAuthStore();
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().setDate(new Date().getDate() - 28)),
-    to: new Date(),
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 29); // Default to last 30 days (29 days prior + today)
+    return { from: startDate, to: endDate };
   });
 
   const [isLoadingPage, setIsLoadingPage] = useState(true);
@@ -68,53 +70,33 @@ export default function YouTubeAnalyticsPage() {
   const [subscriberGrowthData, setSubscriberGrowthData] = useState<EngagementData[]>(mockYouTubeSubscriberGrowth);
 
   // Data processing and fetching logic
-  const processAndSetData = useCallback((account: SocialAccount | null, timeSeries: AnalyticsTimeSeries[], posts: Post[]) => {
-    if (!account) {
-      // Reset to more appropriate empty/zeroed stats if no account or error
+  const processAndSetData = useCallback((account: SocialAccount & {id: string} | null, timeSeries: AnalyticsTimeSeries[], posts: Post[]) => {
+    // Log the raw timeSeries data received from Firestore
+    console.log("[YOUTUBE_PAGE] Raw timeSeries (filtered by date range in theory):", 
+      timeSeries.map(ts => ({
+        metrics: ts.metrics,
+        timestamp: ts.timestamp instanceof Timestamp ? 
+          ts.timestamp.toDate().toISOString() : ts.timestamp,
+        platform: ts.platform,
+        // @ts-ignore
+        docId: ts.id // If you pass document ID for debugging
+      }))
+    );
+    console.log("[YOUTUBE_PAGE] Raw posts (filtered by date range in theory):", posts.length);
+
+
+    if (!account || timeSeries.length === 0) {
+      // Reset to more appropriate empty/zeroed stats if no account or no timeSeries data for the period
       setChannelStats({
-        subscribers: "0",
+        subscribers: account?.profileData?.subscriberCount?.toLocaleString() || "0", // Use from account if available
         totalViews: "0",
         watchTimeHours: "0",
         averageViewDuration: "N/A",
       });
-      setVideoData([]); // Empty array for no videos
-      setSubscriberGrowthData([]); // Empty array for no growth data
-      return;
-    }
-
-    // 1. Process Channel Stats
-    let latestSubscribersCount: number | null = null;
-    let totalViewsCount = 0;
-    let totalWatchTimeHours = 0;
-    
-    const sortedTimeSeries = [...timeSeries].sort((a,b) => (b.timestamp as Timestamp).toMillis() - (a.timestamp as Timestamp).toMillis());
-
-    if (sortedTimeSeries.length > 0) {
-        const latestValidTS = sortedTimeSeries.find(ts => ts.metrics.subscribers !== undefined && ts.metrics.subscribers !== null);
-        if (latestValidTS) {
-            latestSubscribersCount = latestValidTS.metrics.subscribers as number;
-        }
-        totalWatchTimeHours = sortedTimeSeries.reduce((sum, ts) => sum + (ts.metrics.watchTimeHours || 0), 0);
-    }
-
-    posts.forEach(post => {
-        if (post.platform === 'youtube' && post.latestMetrics) {
-            totalViewsCount += post.latestMetrics.views || 0;
-        }
-    });
-
-    setChannelStats({
-        subscribers: latestSubscribersCount !== null ? latestSubscribersCount.toLocaleString() : "0", // Default to 0 if no data
-        totalViews: totalViewsCount > 0 ? (totalViewsCount > 1000000 ? (totalViewsCount/1000000).toFixed(1) + 'M' : (totalViewsCount > 1000 ? (totalViewsCount/1000).toFixed(1) + 'k' : totalViewsCount.toLocaleString())) : "0",
-        watchTimeHours: totalWatchTimeHours > 0 ? (totalWatchTimeHours > 1000 ? (totalWatchTimeHours/1000).toFixed(1) + 'k' : totalWatchTimeHours.toFixed(1)) : "0",
-        averageViewDuration: "N/A" // Keep N/A as it's not calculated yet
-    });
-
-    // 2. Process Video Data (Top 10 by views)
-    const processedVideos: YouTubeVideoPerformance[] = posts
-        .filter(post => post.platform === 'youtube') 
+      // Keep video data from posts, but it might also be empty if posts are filtered
+      const processedVideos: YouTubeVideoPerformance[] = posts
+        .filter(post => post.platform === 'youtube')
         .sort((a, b) => (b.latestMetrics?.views || 0) - (a.latestMetrics?.views || 0))
-        // .slice(0, 10) // Take top 10 for example
         .map(post => ({
             id: post.platformPostId,
             title: post.textContent?.substring(0, 70) || 'Untitled Video',
@@ -124,76 +106,148 @@ export default function YouTubeAnalyticsPage() {
             publishedDate: (post.publishedAt as Timestamp)?.toDate().toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
             thumbnailUrl: post.mediaUrls?.[0] || undefined,
         }));
-    setVideoData(processedVideos.length > 0 ? processedVideos : []); // Set to empty if no processed videos
+      setVideoData(processedVideos);
+      setSubscriberGrowthData([]); // Empty array for no growth data
+      return;
+    }
 
-    // 3. Process Subscriber Growth Data (Ensure chronological order for chart)
-    const growthData: EngagementData[] = timeSeries
-        .filter(ts => ts.metrics.subscribers !== null && ts.metrics.subscribers !== undefined)
-        .map(ts => ({
-            name: format((ts.timestamp as Timestamp).toDate(), "MMM dd"),
-            Subscribers: ts.metrics.subscribers as number,
-        }))
-        .sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime()); // Ensure chronological order
-    setSubscriberGrowthData(growthData.length > 0 ? growthData : []); // Set to empty if no growth data
+    // 1. Process Channel Stats from timeSeries data for the selected date range
+    let totalViewsCount = 0;
+    let totalWatchTimeMinutes = 0; // Calculate in minutes for precision
+    
+    timeSeries.forEach(ts => {
+      totalViewsCount += ts.metrics.views || 0;
+      totalWatchTimeMinutes += ts.metrics.watchTimeMinutes || 0;
+      // Note: individual ts.metrics.averageViewDuration is daily avg, not for summing
+    });
 
-  // Dependencies: only re-process if the raw data itself changes.
-  // Date range filtering for fetching should be handled in the `loadPageData` useEffect.
+    const totalWatchTimeHours = totalWatchTimeMinutes / 60;
+    const avgViewDurationSecs = totalViewsCount > 0 ? (totalWatchTimeMinutes * 60) / totalViewsCount : 0;
+
+    // Subscriber count: Use the value from the SocialAccount document if available.
+    // This value is typically the most recent absolute count.
+    // The timeSeries gives daily gains/losses, not daily totals.
+    const subscriberStat = account.profileData?.subscriberCount?.toLocaleString() || "N/A";
+    // As a fallback or alternative, you could sum `netSubscribers` from timeSeries
+    // let netSubscribersChange = timeSeries.reduce((sum, ts) => sum + (ts.metrics.netSubscribers || 0), 0);
+
+
+    setChannelStats({
+        subscribers: subscriberStat,
+        totalViews: totalViewsCount > 0 ? (totalViewsCount > 1000000 ? (totalViewsCount/1000000).toFixed(1) + 'M' : (totalViewsCount > 1000 ? (totalViewsCount/1000).toFixed(1) + 'k' : totalViewsCount.toLocaleString())) : "0",
+        watchTimeHours: totalWatchTimeHours > 0 ? (totalWatchTimeHours > 1000 ? (totalWatchTimeHours/1000).toFixed(1) + 'k' : totalWatchTimeHours.toFixed(1)) : "0",
+        averageViewDuration: avgViewDurationSecs > 0 ? 
+            (avgViewDurationSecs > 60 ? 
+                `${Math.floor(avgViewDurationSecs / 60)}m ${Math.round(avgViewDurationSecs % 60)}s` : 
+                `${Math.round(avgViewDurationSecs)}s` 
+            ) : "N/A"
+    });
+
+    // 2. Process Video Data (Top 10 by views from posts filtered by date range)
+    const processedVideos: YouTubeVideoPerformance[] = posts
+        .filter(post => post.platform === 'youtube') 
+        .sort((a, b) => (b.latestMetrics?.views || 0) - (a.latestMetrics?.views || 0))
+        // .slice(0, 10) // Already sliced in display
+        .map(post => ({
+            id: post.platformPostId,
+            title: post.textContent?.substring(0, 70) || 'Untitled Video',
+            views: post.latestMetrics?.views || 0,
+            likes: post.latestMetrics?.likes || 0,
+            comments: post.latestMetrics?.comments || 0,
+            publishedDate: (post.publishedAt as Timestamp)?.toDate().toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+            thumbnailUrl: post.mediaUrls?.[0] || undefined,
+        }));
+    setVideoData(processedVideos.length > 0 ? processedVideos : []);
+
+    // 3. Process Chart Data from timeSeries (ensure chronological order for chart)
+    const chartDataInput = [...timeSeries].sort((a,b) => (a.timestamp as Timestamp).toMillis() - (b.timestamp as Timestamp).toMillis());
+
+    const metricsForChart: EngagementData[] = chartDataInput.map(ts => {
+        const date = format((ts.timestamp as Timestamp).toDate(), "MMM dd");
+        const dataPoint: EngagementData = { name: date };
+
+        if (ts.metrics.views !== undefined && ts.metrics.views !== null) dataPoint.Views = ts.metrics.views;
+        if (ts.metrics.watchTimeMinutes !== undefined && ts.metrics.watchTimeMinutes !== null) dataPoint.WatchTimeMins = ts.metrics.watchTimeMinutes;
+        if (ts.metrics.likes !== undefined && ts.metrics.likes !== null) dataPoint.Likes = ts.metrics.likes;
+        if (ts.metrics.comments !== undefined && ts.metrics.comments !== null) dataPoint.Comments = ts.metrics.comments;
+        if (ts.metrics.netSubscribers !== undefined && ts.metrics.netSubscribers !== null) dataPoint.NetSubscribers = ts.metrics.netSubscribers; // Daily change
+        if (ts.metrics.subscribersGained !== undefined && ts.metrics.subscribersGained !== null) dataPoint.SubsDisabled = ts.metrics.subscribersGained; // example for chart
+        
+        return dataPoint;
+    });
+    setSubscriberGrowthData(metricsForChart.length > 0 ? metricsForChart : []);
+
   }, []);
 
   useEffect(() => {
     const loadPageData = async () => {
-      if (!authUser) {
+      if (!authUser || !dateRange || !dateRange.from) { // Ensure dateRange and from date exist
         setIsLoadingPage(false);
         setConnectedYouTubeAccount(null);
+        processAndSetData(null, [], []);
         return;
       }
       setIsLoadingPage(true);
       setError(null);
       try {
-        // 1. Check for connected YouTube account
         const accountsColRef = collection(db, 'users', authUser.uid, 'socialAccounts');
         const q = query(accountsColRef, where("platform", "==", "youtube"), limit(1));
         const accountsSnapshot = await getDocs(q);
 
         if (accountsSnapshot.empty) {
           setConnectedYouTubeAccount(null);
-          processAndSetData(null, [], []); // Clear/reset data
+          processAndSetData(null, [], []);
           setIsLoadingPage(false);
           return;
         }
-        const ytAccount = { id: accountsSnapshot.docs[0].id, ...accountsSnapshot.docs[0].data() } as SocialAccount & {id: string};
+        const ytAccount = { 
+            id: accountsSnapshot.docs[0].id, 
+            ...accountsSnapshot.docs[0].data() 
+        } as SocialAccount & {id: string};
         setConnectedYouTubeAccount(ytAccount);
 
-        // 2. Fetch AnalyticsTimeSeries for this YouTube account (e.g., subscriber data)
-        // TODO: Add date range filtering to this query
-        const timeSeriesQuery = query(
-            collection(db, 'users', authUser.uid, 'socialAccounts', ytAccount.id, 'analyticsTimeSeries'),
-            orderBy('timestamp', 'desc'), // Get latest first for stats, then reverse for chart
-            // where('metrics.subscribers', '!=', null) // Example: only fetch if subscribers exist
-            // limit(100) // Limit data points for now
-        );
-        const timeSeriesSnapshot = await getDocs(timeSeriesQuery);
-        const timeSeriesData = timeSeriesSnapshot.docs.map(doc => doc.data() as AnalyticsTimeSeries);
+        // Ensure 'to' date is set for range queries, default to 'from' date if not
+        const queryEndDate = dateRange.to ? Timestamp.fromDate(dateRange.to) : Timestamp.fromDate(dateRange.from);
+        const queryStartDate = Timestamp.fromDate(dateRange.from);
 
-        // 3. Fetch Posts for this YouTube account
-        // TODO: Add date range filtering to this query
-        const postsQuery = query(
-            collection(db, 'posts'), 
+        // Fetch AnalyticsTimeSeries for this YouTube account, filtered by dateRange
+        const timeSeriesColRef = collection(db, 'users', authUser.uid, 'socialAccounts', ytAccount.id, 'analyticsTimeSeries');
+        const timeSeriesQueryConstraints = [
+            orderBy('timestamp', 'asc'), // Important for chronological processing later if needed
+            where('timestamp', '>=', queryStartDate),
+            where('timestamp', '<=', queryEndDate)
+        ];
+        // console.log("[YOUTUBE_PAGE] timeSeriesQuery criteria:", queryStartDate.toDate(), queryEndDate.toDate());
+        
+        const timeSeriesQ = query(timeSeriesColRef, ...timeSeriesQueryConstraints);
+        const timeSeriesSnapshot = await getDocs(timeSeriesQ);
+        const timeSeriesData = timeSeriesSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as AnalyticsTimeSeries & {id: string}));
+        // console.log("[YOUTUBE_PAGE] Fetched timeSeriesData docs:", timeSeriesSnapshot.docs.length);
+
+
+        // Fetch Posts for this YouTube account, filtered by dateRange
+        const postsColRef = collection(db, 'posts');
+        const postsQueryConstraints = [
             where("userId", "==", authUser.uid),
             where("accountId", "==", ytAccount.id),
             orderBy("publishedAt", "desc"),
-            // limit(20)
-        );
-        const postsSnapshot = await getDocs(postsQuery);
+            where("publishedAt", ">=", queryStartDate),
+            where("publishedAt", "<=", queryEndDate)
+        ];
+        // console.log("[YOUTUBE_PAGE] postsQuery criteria:", queryStartDate.toDate(), queryEndDate.toDate());
+
+        const postsQ = query(postsColRef, ...postsQueryConstraints);
+        const postsSnapshot = await getDocs(postsQ);
         const postsData = postsSnapshot.docs.map(doc => doc.data() as Post);
+        // console.log("[YOUTUBE_PAGE] Fetched postsData docs:", postsSnapshot.docs.length);
         
-        // 4. Process and set all data
         processAndSetData(ytAccount, timeSeriesData, postsData);
 
       } catch (err: unknown) {
         console.error("Error fetching YouTube page data:", err);
         setError(err instanceof Error ? err.message : "Failed to load YouTube data.");
-        processAndSetData(null, [], []); // Clear/reset data
+        setConnectedYouTubeAccount(null); // Clear account on error
+        processAndSetData(null, [], []);
       } finally {
         setIsLoadingPage(false);
       }
@@ -257,13 +311,13 @@ export default function YouTubeAnalyticsPage() {
       {/* Channel Stats Overview - Using fetched data */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Subscribers</p><p className="mt-1 text-3xl font-semibold">{channelStats.subscribers}</p></DashboardCard>
-        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Total Views</p><p className="mt-1 text-3xl font-semibold">{channelStats.totalViews}</p></DashboardCard>
-        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Watch Time (Hours)</p><p className="mt-1 text-3xl font-semibold">{channelStats.watchTimeHours}</p></DashboardCard>
-        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Avg. View Duration</p><p className="mt-1 text-3xl font-semibold">{channelStats.averageViewDuration}</p></DashboardCard>
+        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Total Views (Period)</p><p className="mt-1 text-3xl font-semibold">{channelStats.totalViews}</p></DashboardCard>
+        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Watch Time (Hours, Period)</p><p className="mt-1 text-3xl font-semibold">{channelStats.watchTimeHours}</p></DashboardCard>
+        <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Avg. View Duration (Period)</p><p className="mt-1 text-3xl font-semibold">{channelStats.averageViewDuration}</p></DashboardCard>
       </div>
       
-      {/* Subscriber Growth Chart - Using fetched data */}
-      <DashboardCard title="Subscriber Growth Over Time" className="h-96">
+      {/* YouTube Metrics Over Time Chart - Using fetched data */}
+      <DashboardCard title="YouTube Metrics Over Time" className="h-96">
         <EngagementLineChart data={subscriberGrowthData} />
       </DashboardCard>
 

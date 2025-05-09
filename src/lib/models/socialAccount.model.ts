@@ -22,6 +22,14 @@ export interface SocialAccount {
   status: ConnectionStatus; // Connection status.
   lastSyncedAt?: Timestamp | null; // Timestamp of the last successful data fetch for this account. Optional.
 
+  // Optional field to store general profile data fetched at connection time or periodically
+  profileData?: {
+    subscriberCount?: number;
+    viewCount?: number;       // Example: total lifetime views for a YouTube channel
+    videoCount?: number;      // Example: total public videos for a YouTube channel
+    [key: string]: any;     // Allow other platform-specific general stats
+  } | null;
+
   // Sensitive API tokens - marked as optional for now, as real API integration is future work.
   // IMPORTANT: These should be encrypted or stored securely in a production environment.
   accessToken?: string; // API Access Token.

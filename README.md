@@ -91,6 +91,26 @@ Our planned database structure uses **Firebase Firestore**. See `DatabaseDocumen
 #### Social Account Management
 *(Placeholder removed - See 'Account Connection Interface' above)*
 
+### Security Implementation Details
+- **Authentication**: User authentication is handled by **Firebase Authentication**, supporting Google OAuth initially. User sessions are managed client-side (e.g., via Zustand store) and route protection is enforced using the `<ProtectedRoute>` component.
+- **Authorization**: Access to user-specific data stored in Firestore is controlled by **Firestore Security Rules**. The rules enforce that users can only read/write their own data (e.g., their user profile, their connected social accounts, their posts, their analytics time series). Backend functions (like `fetchInitialYouTubeStats`) use Firebase Admin SDK for privileged access when needed.
+- **API Keys**: Frontend Firebase configuration keys are stored in environment variables prefixed with `NEXT_PUBLIC_`. Sensitive backend API keys (like OpenAI or potentially platform API keys for backend fetches) will be stored as environment variables accessible only by Cloud Functions.
+- **Data Handling**: Sensitive data like OAuth access/refresh tokens will eventually need secure handling (e.g., potentially storing refresh tokens server-side only, encryption at rest if required), although the current implementation uses short-lived access tokens passed to the initial Cloud Function.
+
+### Data Visualization Strategy
+- **Dashboard Cards**: Key aggregated metrics (Total Followers, Impressions, etc.) are displayed prominently on the main dashboard using reusable `DashboardCard` components (`src/components/dashboard/DashboardCard.tsx`) for quick overview.
+- **Charts**: Time-series data (e.g., Engagement Over Time, Subscriber Growth) is visualized using line charts via the **Recharts** library (e.g., `src/components/charts/EngagementLineChart.tsx`). Categorical data (e.g., Platform Distribution) uses pie charts (e.g., `src/components/charts/PlatformPieChart.tsx`).
+- **Responsiveness**: Charts and cards are designed to be responsive, adapting to different screen sizes using Tailwind CSS utility classes.
+
+### Data Transformation Methods
+- **Current State (MVP / Initial)**: Data displayed on the dashboard is primarily derived from mock data (`src/lib/mockData.ts`) or very limited data fetched directly from Firestore (e.g., the initial subscriber count fetched by `fetchInitialYouTubeStats`). Minimal client-side processing is done to format this data for display (e.g., in `src/app/dashboard/page.tsx` and `src/app/dashboard/youtube/page.tsx`).
+- **Planned Future State**: The primary data transformation will occur in **backend Cloud Functions**. These functions will:
+    1. Fetch raw data from social media platform APIs (Analytics and Data APIs).
+    2. Normalize this data into the consistent schemas defined in `DatabaseDocumentation.md`.
+    3. Aggregate data as needed (e.g., calculate daily/weekly totals, engagement rates).
+    4. Store the processed, aggregated, and normalized data in Firestore collections (`analyticsTimeSeries`, updating `posts`, potentially user-level aggregate stats).
+    5. The frontend application will then primarily read this pre-processed data from Firestore, requiring minimal transformation on the client-side (mostly just formatting for display).
+
 ### Authentication and Authorization
 Authentication will be handled using **Firebase Authentication**. The initial implementation will focus on email/password and potentially Google OAuth. Firebase Security Rules will be used to protect Firestore data. *(Note: Previous mention of custom auth/NextAuth.js is outdated).*
 
