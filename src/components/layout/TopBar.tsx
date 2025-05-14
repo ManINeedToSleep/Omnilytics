@@ -13,7 +13,7 @@
 import { useState } from 'react'; // Import useState
 import Link from 'next/link'; // Import Link
 import { useAuthStore } from "@/store/authStore";
-import { Menu, Bell, Sun, Moon, User as UserIcon, ChevronDown } from 'lucide-react'; // Import icons
+import { Menu, Bell, User as UserIcon, ChevronDown } from 'lucide-react'; // Import icons
 import LogoutButton from "@/components/auth/LogoutButton"; // Import LogoutButton
 // TODO: Add Theme toggle functionality
 
@@ -24,8 +24,6 @@ interface TopBarProps {
 export default function TopBar({ onToggleSidebar }: TopBarProps) {
   const user = useAuthStore((state) => state.user);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for dropdown
-  // TODO: Add state for theme
-  const currentTheme = 'light'; // Placeholder
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);

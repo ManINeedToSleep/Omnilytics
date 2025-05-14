@@ -14,6 +14,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import EngagementLineChart from "@/components/charts/EngagementLineChart";
 import {
@@ -78,7 +79,7 @@ export default function YouTubeAnalyticsPage() {
         timestamp: ts.timestamp instanceof Timestamp ? 
           ts.timestamp.toDate().toISOString() : ts.timestamp,
         platform: ts.platform,
-        // @ts-ignore
+        // @ts-expect-error - docId is added dynamically for debugging, not part of AnalyticsTimeSeries type
         docId: ts.id // If you pass document ID for debugging
       }))
     );
@@ -330,7 +331,7 @@ export default function YouTubeAnalyticsPage() {
                     <li key={video.id} className="py-4">
                         <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                            <img className="h-10 w-16 rounded object-cover" src={video.thumbnailUrl || 'https://via.placeholder.com/120x90?text=Video'} alt={video.title} />
+                            <Image className="h-10 w-16 rounded object-cover" src={video.thumbnailUrl || 'https://via.placeholder.com/120x90?text=Video'} alt={video.title} width={64} height={40} />
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-gray-900 dark:text-white">

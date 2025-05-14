@@ -9,6 +9,7 @@
  *   - src/lib/mockData.ts (for platform colors)
  */
 import React from 'react';
+import Image from 'next/image';
 import type { User as FirestoreUser } from '@/lib/models/user.model';
 import type { SocialAccount, SocialPlatform } from '@/lib/models/socialAccount.model';
 import { platformColors } from '@/lib/mockData';
@@ -192,10 +193,12 @@ export default function ConnectedAccountsManager({
               <div key={account.id} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-gray-600">
                  <div className="flex items-center space-x-3">
                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden flex-shrink-0">
-                     <img 
+                     <Image 
                        src={account.profilePictureUrl || `https://via.placeholder.com/40?text=${account.platform.substring(0,2).toUpperCase()}`}
                        alt={account.platform} 
                        className="w-full h-full object-cover"
+                       width={32} 
+                       height={32}
                      />
                    </div>
                    <div className="min-w-0">

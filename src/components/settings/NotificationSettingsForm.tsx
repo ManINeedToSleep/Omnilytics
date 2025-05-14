@@ -15,11 +15,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 
 // Define props if needed (e.g., initial state, save handler)
-interface NotificationSettingsFormProps {
-  // initialPreferences?: { emailDigests?: boolean; platformUpdates?: boolean };
-  // onSave?: (preferences: { emailDigests?: boolean; platformUpdates?: boolean }) => Promise<void>;
-  // isSaving?: boolean;
-}
+// interface NotificationSettingsFormProps {
+//   // initialPreferences?: { emailDigests?: boolean; platformUpdates?: boolean };
+//   // onSave?: (preferences: { emailDigests?: boolean; platformUpdates?: boolean }) => Promise<void>;
+//   // isSaving?: boolean;
+// }
+type NotificationSettingsFormProps = Record<string, unknown>; // Changed to type alias
 
 export default function NotificationSettingsForm({ }: NotificationSettingsFormProps) {
   // Placeholder state for notification preferences

@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import EngagementLineChart from "@/components/charts/EngagementLineChart";
 import {
@@ -171,6 +172,18 @@ export default function InstagramAnalyticsPage() {
     return <div className="flex justify-center items-center h-64"><p className="text-gray-500 dark:text-gray-400">Loading Instagram Analytics...</p></div>;
   }
 
+  if (error && !connectedInstagramAccount) {
+    return (
+      <DashboardCard className="text-center py-12">
+        <h3 className="text-xl font-semibold text-red-600 dark:text-red-400">Error</h3>
+        <p className="mt-2 text-md text-gray-500 dark:text-gray-400">{error}</p>
+        <div className="mt-8">
+          <Button onClick={() => window.location.reload()} variant="outline">Try Again</Button>
+        </div>
+      </DashboardCard>
+    );
+  }
+
   if (!connectedInstagramAccount) {
     return (
       <DashboardCard className="text-center py-12">
@@ -235,6 +248,13 @@ export default function InstagramAnalyticsPage() {
         </Popover>
       </div>
 
+      {/* Display error if one exists and we have a connected account (meaning error is specific to data loading for this account) */}
+      {error && connectedInstagramAccount && (
+        <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+          <span className="font-medium">Error:</span> {error}
+        </div>
+      )}
+
       {/* Profile Stats Overview */}
       <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
         <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Followers</p><p className="text-2xl font-semibold">{profileStats.followers}</p></DashboardCard>
@@ -259,7 +279,7 @@ export default function InstagramAnalyticsPage() {
                   <li key={post.id} className="py-4">
                       <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                          <img className="h-12 w-12 rounded object-cover" src={post.thumbnailUrl || 'https://via.placeholder.com/100x100?text=IG'} alt={post.captionSummary.substring(0,20)} />
+                          <Image className="h-12 w-12 rounded object-cover" src={post.thumbnailUrl || 'https://via.placeholder.com/100x100?text=IG'} alt={post.captionSummary.substring(0,20)} width={48} height={48} />
                       </div>
                       <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-gray-900 dark:text-white">

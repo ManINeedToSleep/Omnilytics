@@ -26,7 +26,6 @@ import {
   Linkedin, 
   ChevronDown, 
   ChevronUp,
-  LogOut, // Import LogOut icon
   X as XIcon // Import X icon for the close button
 } from 'lucide-react'; // Import Lucide icons
 

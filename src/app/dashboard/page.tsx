@@ -22,13 +22,12 @@ import { getFunctions, httpsCallable } from 'firebase/functions'; // Import Func
 import type { SocialPlatform } from "@/lib/models/socialAccount.model";
 import EngagementLineChart, { type EngagementData } from "@/components/charts/EngagementLineChart";
 import PlatformPieChart from "@/components/charts/PlatformPieChart";
-import { mockEngagementData, mockPlatformData, mockStats } from "@/lib/mockData"; // Keep mock data for now
+import { mockEngagementData, mockPlatformData } from "@/lib/mockData"; // Keep mock data for now
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import DateRangePicker from '@/components/dashboard/DateRangePicker';
-import { LinkIcon, CalendarIcon, ChevronsUpDown } from "lucide-react";
-import { format, differenceInDays, endOfMonth, eachDayOfInterval, subDays, startOfWeek, endOfWeek, startOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { LinkIcon, ChevronsUpDown } from "lucide-react";
+import { format, differenceInDays, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { DateRange } from "react-day-picker";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 

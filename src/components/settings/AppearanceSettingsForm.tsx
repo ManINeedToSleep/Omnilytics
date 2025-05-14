@@ -14,10 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 // Define props if needed (e.g., for initial theme state, save handler)
-interface AppearanceSettingsFormProps {
-  // onThemeChange?: (theme: 'light' | 'dark') => void;
-  // isSaving?: boolean;
-}
+// interface AppearanceSettingsFormProps {
+//   // onThemeChange?: (theme: 'light' | 'dark') => void;
+//   // isSaving?: boolean;
+// }
+type AppearanceSettingsFormProps = Record<string, unknown>; // Changed to type alias
 
 export default function AppearanceSettingsForm({ }: AppearanceSettingsFormProps) {
   // TODO: Get current theme state from context/store (e.g., next-themes)

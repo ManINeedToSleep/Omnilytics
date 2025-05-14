@@ -27,7 +27,7 @@ export interface SocialAccount {
     subscriberCount?: number;
     viewCount?: number;       // Example: total lifetime views for a YouTube channel
     videoCount?: number;      // Example: total public videos for a YouTube channel
-    [key: string]: any;     // Allow other platform-specific general stats
+    [key: string]: unknown; // Changed any to unknown
   } | null;
 
   // Sensitive API tokens - marked as optional for now, as real API integration is future work.

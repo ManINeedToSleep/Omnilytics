@@ -15,7 +15,7 @@ import {
   mockTwitterFollowerGrowth,
   type TwitterPostPerformance
 } from '@/lib/mockData';
-import { CalendarIcon, Twitter as TwitterIcon, Users, BarChart2, Repeat, Heart, MessageCircle, Eye, LinkIcon as ConnectIcon, Zap } from 'lucide-react';
+import { CalendarIcon, Twitter as TwitterIcon, Repeat, Heart, MessageCircle, Eye, LinkIcon as ConnectIcon, Zap } from 'lucide-react';
 
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -176,6 +176,18 @@ export default function TwitterAnalyticsPage() {
     return <div className="flex justify-center items-center h-64"><p className="text-gray-500 dark:text-gray-400">Loading Twitter/X Analytics...</p></div>;
   }
 
+  if (error && !connectedTwitterAccount && isPremiumUser !== false) {
+    return (
+        <DashboardCard className="text-center py-12">
+            <h3 className="text-xl font-semibold text-red-600 dark:text-red-400">Error</h3>
+            <p className="mt-2 text-md text-gray-500 dark:text-gray-400">{error}</p>
+            <div className="mt-8">
+                <Button onClick={() => window.location.reload()} variant="outline">Try Again</Button>
+            </div>
+        </DashboardCard>
+    );
+  }
+
   if (!isPremiumUser) {
     return (
       <DashboardCard className="text-center py-12">
@@ -231,6 +243,12 @@ export default function TwitterAnalyticsPage() {
             </PopoverContent>
         </Popover>
       </div>
+
+      {error && connectedTwitterAccount && isPremiumUser && (
+        <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+          <span className="font-medium">Error:</span> {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <DashboardCard><p className="text-xs text-gray-500 dark:text-gray-400">Followers</p><p className="mt-1 text-3xl font-semibold">{profileStats.followers}</p></DashboardCard>

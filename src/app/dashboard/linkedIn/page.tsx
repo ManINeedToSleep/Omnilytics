@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import EngagementLineChart from "@/components/charts/EngagementLineChart";
 import {
@@ -258,7 +259,7 @@ export default function LinkedInAnalyticsPage() {
                     <div className="flex items-center space-x-4">
                     {post.thumbnailUrl && (
                       <div className="flex-shrink-0">
-                          <img className="h-12 w-16 rounded object-cover" src={post.thumbnailUrl} alt={post.contentSummary.substring(0,20)} />
+                          <Image className="h-12 w-16 rounded object-cover" src={post.thumbnailUrl} alt={post.contentSummary.substring(0,20)} width={64} height={48} />
                       </div>
                     )}
                     <div className="min-w-0 flex-1">

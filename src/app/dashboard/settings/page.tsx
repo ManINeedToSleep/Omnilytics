@@ -170,6 +170,7 @@ export default function SettingsPage() {
     setIsConnecting(platform);
     setError(null);
     let provider: GoogleAuthProvider | OAuthProvider;
+    let ytApiErrorMessage: string | null = null; // Declare here to be accessible in the outer catch
 
     try {
       const googleScopes = ['https://www.googleapis.com/auth/youtube.readonly'];
@@ -238,8 +239,8 @@ export default function SettingsPage() {
           console.error('Error fetching YouTube channel details:', ytApiError);
           // Decide if this is a fatal error for connection or if we proceed with Google details
           // For now, proceed with Google details as fallback, error will be shown by setError later if needed
-          let ytErrorMessage = 'Could not fetch specific YouTube channel details.';
-          if (ytApiError instanceof Error) ytErrorMessage += ` ${ytApiError.message}`;
+          ytApiErrorMessage = 'Could not fetch specific YouTube channel details.'; // Assign here
+          if (ytApiError instanceof Error) ytApiErrorMessage += ` ${ytApiError.message}`;
           // Potentially set a non-fatal warning here, or let the main catch handle it
           // For now, we let it fallback to Google details if API call fails
         }
@@ -309,6 +310,12 @@ export default function SettingsPage() {
         }
       } else if (connectError instanceof Error) {
          friendlyMessage = connectError.message;
+      }
+      // If there was a YouTube API specific error message and the primary error is generic for YouTube, append it.
+      if (platform === 'youtube' && ytApiErrorMessage && friendlyMessage === `Failed to connect ${platform}.`) {
+        friendlyMessage = ytApiErrorMessage; // Use the specific YouTube API error
+      } else if (platform === 'youtube' && ytApiErrorMessage) {
+        friendlyMessage += ` (${ytApiErrorMessage})`; // Append YouTube API error details
       }
       setError(friendlyMessage);
     } finally {
